@@ -8,9 +8,25 @@ use App\Services\ResultService; // ✅ নতুন সার্ভিস ইম
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Traits\ApiResponse;
+/**
+ * @group Examination Module
+ *
+ * APIs for creating exams, entering marks, and viewing results.
+ */
 
 class ExamController extends Controller
 {
+    /**
+     * Create Exam
+     *
+     * Create a new exam entry (e.g., Final Exam 2026).
+     *
+     * @bodyParam name string required Name of the exam. Example: Final Term
+     * @bodyParam class_id integer required The Class ID. Example: 1
+     * @bodyParam session string required Academic Session. Example: 2026
+     * @bodyParam start_date date required YYYY-MM-DD. Example: 2026-11-01
+     * @bodyParam end_date date required YYYY-MM-DD. Example: 2026-11-15
+     */
     use ApiResponse;
 
     protected $examService;
@@ -30,7 +46,8 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
-            'class_id' => 'required|exists:classes,id', // 'session' এর বদলে class_id সাধারণত বেশি ব্যবহৃত হয়, আপনার মাইগ্রেশন চেক করবেন
+            'class_id' => 'required|exists:classes,id',
+            'session' => 'required|string', // 'session' এর বদলে class_id সাধারণত বেশি ব্যবহৃত হয়, আপনার মাইগ্রেশন চেক করবেন
             'start_date' => 'required|date',
             'end_date' => 'required|date'
         ]);
@@ -44,33 +61,45 @@ class ExamController extends Controller
     /**
      * মার্কস এন্ট্রি করা (Teacher)
      */
-    public function storeMarks(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            // 'class_id' => 'required|exists:classes,id', // মার্কস এন্ট্রিতে ক্লাস আইডি সবসময় জরুরি না হতেও পারে যদি এক্সাম আইডিতে ক্লাস থাকে
-            'subject_id' => 'required|exists:subjects,id',
-            'marks' => 'required|array',
-            'marks.*.student_id' => 'required|exists:student_profiles,id',
-            'marks.*.marks_obtained' => 'required|numeric|min:0|max:100'
-        ]);
 
-        // আমরা এখানে সরাসরি লুপ চালিয়ে মার্কস সেভ করতে পারি অথবা আপনার সার্ভিস ব্যবহার করতে পারি
-        foreach ($validated['marks'] as $markData) {
-            \App\Models\ExamMark::updateOrCreate(
-                [
-                    'exam_id' => $validated['exam_id'],
-                    'student_id' => $markData['student_id'],
-                    'subject_id' => $validated['subject_id']
-                ],
-                [
-                    'marks_obtained' => $markData['marks_obtained']
-                ]
-            );
-        }
 
-        return $this->success(null, 'Marks submitted successfully', 201);
+
+    /**
+     * Submit Marks
+     *
+     * Allow teachers to submit marks for a specific subject and exam.
+     *
+     * @bodyParam exam_id integer required The Exam ID.
+     * @bodyParam subject_id integer required The Subject ID.
+     * @bodyParam marks object[] required Array of student marks. Example: [{"student_id": 1, "marks_obtained": 80}]
+     */
+  public function storeMarks(Request $request): JsonResponse
+{
+    $validated = $request->validate([
+        'exam_id' => 'required|exists:exams,id',
+        'class_id' => 'required|exists:classes,id', // ✅ class_id এখন বাধ্যতামূলক
+        'subject_id' => 'required|exists:subjects,id',
+        'marks' => 'required|array',
+        'marks.*.student_id' => 'required|exists:student_profiles,id',
+        'marks.*.marks_obtained' => 'required|numeric|min:0|max:100'
+    ]);
+
+    foreach ($validated['marks'] as $markData) {
+        \App\Models\ExamMark::updateOrCreate(
+            [
+                'exam_id' => $validated['exam_id'],
+                'student_id' => $markData['student_id'],
+                'subject_id' => $validated['subject_id']
+            ],
+            [
+                'class_id' => $validated['class_id'], // ✅ ডাটাবেসে class_id সেভ করা হচ্ছে
+                'marks_obtained' => $markData['marks_obtained']
+            ]
+        );
     }
+
+    return $this->success(null, 'Marks submitted successfully', 201);
+}
 
     /**
      * একজন ছাত্রের রেজাল্ট এবং রিপোর্ট কার্ড দেখা (Dynamic GPA Calculation)

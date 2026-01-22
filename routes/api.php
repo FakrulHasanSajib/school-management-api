@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\HRController;
 use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\NoticeController; // ✅ নতুন কন্ট্রোলার
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\Dashboard\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,5 +124,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('expenses')->group(function () {
         Route::post('/categories', [ExpenseController::class, 'storeCategory']); // ক্যাটাগরি তৈরি
         Route::post('/', [ExpenseController::class, 'storeExpense']); // খরচ যোগ করা
+    });
+    // --- 12. Dashboard Module (Organized) ---
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'stats']);
     });
 });

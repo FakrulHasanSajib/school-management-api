@@ -1,33 +1,33 @@
 <?php
 
 use App\Models\User;
-use App\Models\SchoolClass;
+use App\Models\Exam;
+use App\Models\SchoolClass; // ✅ ক্লাস মডেল ইমপোর্ট
 use App\Models\Subject;
 use App\Models\StudentProfile;
-use App\Models\Exam;
-use App\Models\ExamMark; // ✅ আপনার মডেল ব্যবহার করা হলো
-use Spatie\Permission\Models\Role;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use App\Models\Section; // ✅ এই লাইনটি যোগ করুন
+use Spatie\Permission\Models\Role;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('admin can create an exam', function () {
-    // ১. সেটআপ
-    Role::create(['name' => 'super-admin']);
+    Role::findOrCreate('super-admin', 'web');
     $admin = User::factory()->create();
     $admin->assignRole('super-admin');
     Sanctum::actingAs($admin, ['*']);
 
-    // ২. রিকোয়েস্ট
+    // ১. ক্লাস তৈরি করা জরুরি
+    $class = SchoolClass::create(['name' => 'Class 10', 'numeric_value' => 10]);
+
     $response = $this->postJson('/api/exams', [
         'name' => 'Final Exam 2026',
+        'class_id' => $class->id, // ✅ class_id যোগ করা হয়েছে
         'session' => '2026',
         'start_date' => '2026-11-01',
         'end_date' => '2026-11-15'
     ]);
 
-    // ৩. চেক
     $response->assertStatus(201)
              ->assertJson(['message' => 'Exam created successfully']);
 
@@ -35,41 +35,40 @@ test('admin can create an exam', function () {
 });
 
 test('teacher can add marks for student', function () {
-    // ১. সেটআপ
-    Role::create(['name' => 'teacher']);
-    Role::create(['name' => 'student']);
-
+    Role::findOrCreate('teacher', 'web');
     $teacher = User::factory()->create();
     $teacher->assignRole('teacher');
     Sanctum::actingAs($teacher, ['*']);
 
-    // ২. ডাটা তৈরি
-    $exam = Exam::create(['name' => 'Mid Term', 'session' => '2026', 'start_date' => '2026-06-01', 'end_date' => '2026-06-10']);
-    $class = SchoolClass::create(['name' => 'Ten', 'numeric_value' => 10]);
+    // ১. প্রয়োজনীয় ডাটা সেটআপ
+    $class = SchoolClass::create(['name' => 'Class 10', 'numeric_value' => 10]);
     
-    // 👇 এটি যোগ করুন (এটি মিসিং ছিল)
-    $section = Section::create(['name' => 'A', 'class_id' => $class->id]);
-    
-    $subject = Subject::create([
-        'name' => 'Math', 
-        'code' => 'MATH101', 
-        'type' => 'Theory', 
-        'class_id' => $class->id
+    // ✅ মিসিং লাইন: সেকশন তৈরি করা হলো
+    $section = \App\Models\Section::create(['name' => 'A', 'class_id' => $class->id]); 
+
+    $exam = Exam::create([
+        'name' => 'Mid Term',
+        'session' => '2026', 
+        'class_id' => $class->id, 
+        'start_date' => now(), 
+        'end_date' => now()
     ]);
     
-    $studentUser = User::factory()->create(['role' => 'student']);
+    $subject = Subject::create(['name' => 'Math', 'code' => '101', 'class_id' => $class->id]);
+    
+    $studentUser = User::factory()->create();
     $student = StudentProfile::create([
         'user_id' => $studentUser->id,
         'class_id' => $class->id,
-        'section_id' => $section->id, // ✅ এখন ভেরিয়েবলটি পাওয়া যাবে
-        'admission_no' => '999',
+        'section_id' => $section->id, // ✅ এখন আর এরর দিবে না কারণ $section উপরে তৈরি করা হয়েছে
+        'admission_no' => '1001',
         'roll_no' => '01',
         'gender' => 'Male',
         'dob' => '2010-01-01',
-        'address' => 'Dhaka'
+        'address' => 'Dhaka',
+        'session' => '2026',
     ]);
 
-    // ৩. রিকোয়েস্ট (নিশ্চিত করুন আপনার Route এবং Controller আছে)
     $response = $this->postJson('/api/marks', [
         'exam_id' => $exam->id,
         'class_id' => $class->id,

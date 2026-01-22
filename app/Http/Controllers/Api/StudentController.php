@@ -10,7 +10,25 @@ use Illuminate\Http\JsonResponse;
 use App\Traits\ApiResponse; // আপনার ApiResponse Trait টি ইমপোর্ট করুন
 
 class StudentController extends Controller
-{
+{   /**
+     * Admit New Student
+     *
+     * Create a new student profile along with a user account.
+     *
+     * @bodyParam name string required The name of the student. Example: Karim Uddin
+     * @bodyParam email string required The email of the student. Example: karim@school.com
+     * @bodyParam password string required The password for login. Example: password123
+     * @bodyParam class_id integer required The ID of the class. Example: 1
+     * @bodyParam section_id integer required The ID of the section. Example: 2
+     * @bodyParam admission_no string required Unique admission number. Example: ADM-2026-001
+     * @bodyParam gender string required 'Male' or 'Female'. Example: Male
+     *
+     * @response 201 {
+     * "status": true,
+     * "message": "Student admitted successfully",
+     * "data": { "id": 5, "user_id": 10, "class_id": 1, "admission_no": "ADM-2026-001" }
+     * }
+     */
     use ApiResponse; // Trait ব্যবহার করছি
 
     protected $studentService;
@@ -19,7 +37,18 @@ class StudentController extends Controller
     {
         $this->studentService = $studentService;
     }
-
+    /**
+     * Get All Students
+     *
+     * Retrieve a list of all students with their class and section info.
+     *
+     * @response 200 {
+     * "status": true,
+     * "data": [
+     * { "id": 1, "admission_no": "1001", "user": { "name": "Rahim" }, "class_name": "Class 10" }
+     * ]
+     * }
+     */
     public function index(): JsonResponse
     {
         $students = $this->studentService->getAllStudents();

@@ -27,32 +27,35 @@ public function student_can_view_report_card_with_gpa()
     $studentUser->assignRole('student');
     Sanctum::actingAs($studentUser, ['*']);
 
-    // ২. ক্লাস ও সেকশন তৈরি (ফিক্সড)
+    // ২. ক্লাস ও সেকশন তৈরি
     $class = SchoolClass::create(['name' => 'Class 10', 'numeric_value' => 10]);
-    $section = \App\Models\Section::create(['name' => 'A', 'class_id' => $class->id]); // ✅ সেকশন তৈরি
+    $section = \App\Models\Section::create(['name' => 'A', 'class_id' => $class->id]);
 
-    // ৩. স্টুডেন্ট তৈরি (section_id সহ)
+    // ৩. স্টুডেন্ট তৈরি
     $student = StudentProfile::create([
         'user_id' => $studentUser->id,
         'class_id' => $class->id,
-        'section_id' => $section->id, // ✅ এখন আর এরর দিবে না
+        'section_id' => $section->id,
         'admission_no' => 'RC-100',
         'roll_no' => '01',
         'gender' => 'Male',
-        'dob' => '2010-01-01'
+        'dob' => '2010-01-01',
+        'address' => 'Dhaka',
+        'session' => '2026'
     ]);
 
-    $exam = Exam::create(['name' => 'Final Term', 'class_id' => $class->id, 'start_date' => now(), 'end_date' => now()]);
+    $exam = Exam::create(['name' => 'Final Term', 'class_id' => $class->id,'session' => '2026', 'start_date' => now(), 'end_date' => now()]);
 
-    // ৪. মার্কস এন্ট্রি (Bangla: 80 [GPA 5.0], English: 50 [GPA 3.0])
+    // ৪. মার্কস এন্ট্রি
     $bangla = Subject::create(['name' => 'Bangla', 'code' => '101', 'class_id' => $class->id, 'total_marks' => 100, 'pass_marks' => 33]);
     $english = Subject::create(['name' => 'English', 'code' => '102', 'class_id' => $class->id, 'total_marks' => 100, 'pass_marks' => 33]);
 
-    ExamMark::create(['exam_id' => $exam->id, 'student_id' => $student->id, 'subject_id' => $bangla->id, 'marks_obtained' => 80]);
-    ExamMark::create(['exam_id' => $exam->id, 'student_id' => $student->id, 'subject_id' => $english->id, 'marks_obtained' => 50]);
+    ExamMark::create(['exam_id' => $exam->id,'class_id' => $class->id, 'student_id' => $student->id, 'subject_id' => $bangla->id, 'marks_obtained' => 80]);
+    ExamMark::create(['exam_id' => $exam->id, 'class_id' => $class->id, 'student_id' => $student->id, 'subject_id' => $english->id, 'marks_obtained' => 50]);
 
-    // ৫. রিপোর্ট কার্ড দেখার রিকোয়েস্ট
-    $response = $this->getJson("/api/exams/{$exam->id}/report-card/{$student->id}");
+    // ৫. রিপোর্ট কার্ড দেখার রিকোয়েস্ট (URL ঠিক করা হয়েছে)
+    // ⚠️ আপনার api.php তে রাউটটি চেক করুন, এটি সম্ভবত /exams/{exam_id}/results/{student_id}
+    $response = $this->getJson("/api/exams/{$exam->id}/results/{$student->id}"); 
 
     // ৬. চেক করা
     $response->assertStatus(200)
@@ -61,7 +64,6 @@ public function student_can_view_report_card_with_gpa()
                     'final_gpa'
                 ]);
     
-    // GPA ৪.০০ এসেছে কি না চেক করা (5.0 + 3.0) / 2 = 4.0
     $this->assertEquals(4.00, $response->json('final_gpa'));
 }
 }
