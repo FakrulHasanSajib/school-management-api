@@ -7,6 +7,7 @@ use App\Http\Requests\StoreStudentRequest;
 use App\Http\Resources\StudentResource;
 use App\Services\StudentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use App\Traits\ApiResponse; // আপনার ApiResponse Trait টি ইমপোর্ট করুন
 
 class StudentController extends Controller
@@ -99,4 +100,56 @@ class StudentController extends Controller
         
         return $this->success(new StudentResource($student), 'Student updated successfully');
     }
+    /**
+     * Delete Student
+     */
+    public function destroy($id): JsonResponse
+    {
+        // ১. স্টুডেন্ট খুঁজে বের করা (আপনার সার্ভিস ব্যবহার করে)
+        $student = $this->studentService->getStudentById($id);
+
+        if (!$student) {
+            return $this->error('Student not found', 404);
+        }
+
+        // ২. ইউজার এবং স্টুডেন্ট ডাটা ডিলিট করা
+        // (আগে ইউজার ডিলিট করলে ফরেন কি এরর আসতে পারে, তাই বুঝে করতে হবে)
+        
+        $user = $student->user; // ইউজারের তথ্য নেওয়া
+        $student->delete();     // আগে স্টুডেন্ট প্রোফাইল ডিলিট
+        
+        if ($user) {
+            $user->delete();    // এরপর মেইন লগইন একাউন্ট ডিলিট
+        }
+
+        return $this->success(null, 'Student deleted successfully');
+    }
+    // StudentController.php এর ভেতরে
+
+// StudentController.php এর ভেতরে যোগ করুন
+
+public function getNextNumbers(Request $request): JsonResponse
+{
+    // ১. পরবর্তী অ্যাডমিশন নম্বর (এটা গ্লোবাল সিরিয়াল)
+    $lastStudent = \App\Models\StudentProfile::latest('id')->first();
+    $nextId = $lastStudent ? $lastStudent->id + 1 : 1;
+    $nextAdmissionNo = 'ADM-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+
+    // ২. পরবর্তী রোল নম্বর (ক্লাস এবং সেকশন অনুযায়ী)
+    $nextRollNo = 1;
+    
+    // যদি ক্লাস এবং সেকশন দুটোই পাঠানো হয়
+    if ($request->class_id && $request->section_id) {
+        $lastRoll = \App\Models\StudentProfile::where('class_id', $request->class_id)
+            ->where('section_id', $request->section_id)
+            ->max('roll_no');
+            
+        $nextRollNo = $lastRoll ? (int)$lastRoll + 1 : 1;
+    }
+
+    return response()->json([
+        'next_admission_no' => $nextAdmissionNo,
+        'next_roll_no' => $nextRollNo
+    ]);
+}
 }

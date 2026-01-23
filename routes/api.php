@@ -28,6 +28,7 @@ Route::post('/login', [AuthController::class, 'login']);
 | Protected Routes (Sanctum Auth)
 |--------------------------------------------------------------------------
 */
+Route::get('/students/next-numbers', [StudentController::class, 'getNextNumbers']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // --- User & Auth ---
@@ -76,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/section/{section_id}', [StudentController::class, 'getBySection']);
         Route::get('/{id}', [StudentController::class, 'show']);
         Route::put('/{id}', [StudentController::class, 'update']);
+        Route::delete('/{id}', [StudentController::class, 'destroy']);
     });
 
 
@@ -129,4 +131,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
     });
+        
+
 });
+
+
+
