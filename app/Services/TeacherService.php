@@ -46,7 +46,8 @@ class TeacherService
      * সব শিক্ষকের লিস্ট
      */
     public function getAllTeachers()
-    {
-        return User::role('teacher')->with('teacherProfile')->paginate(10);
-    }
+{
+    // শুধু রিলেশন চেক করে সব টিচার নিয়ে আসা
+    return User::where('role', 'teacher')->with('teacherProfile')->latest()->get();
+}
 }

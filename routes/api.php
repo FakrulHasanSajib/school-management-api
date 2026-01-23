@@ -12,23 +12,26 @@ use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\HRController;
 use App\Http\Controllers\Api\LibraryController;
-use App\Http\Controllers\Api\NoticeController; // ✅ নতুন কন্ট্রোলার
+use App\Http\Controllers\Api\NoticeController; 
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| Public Routes (Login & Helpers)
 |--------------------------------------------------------------------------
 */
 Route::post('/login', [AuthController::class, 'login']);
 
+// এই হেল্পার রাউটগুলো পাবলিক রাখা হয়েছে যাতে ফর্ম লোড করার সময় টোকেন ঝামেলা না করে
+Route::get('academic/classes/{classId}/sections', [AcademicController::class, 'getSectionsByClass']);
+Route::get('/students/next-numbers', [StudentController::class, 'getNextNumbers']);
+
 /*
 |--------------------------------------------------------------------------
-| Protected Routes (Sanctum Auth)
+| Protected Routes (Sanctum Auth) - Login Required
 |--------------------------------------------------------------------------
 */
-Route::get('/students/next-numbers', [StudentController::class, 'getNextNumbers']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // --- User & Auth ---
@@ -46,13 +49,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sections', [AcademicController::class, 'storeSection']);
         Route::post('/subjects', [AcademicController::class, 'storeSubject']);
         Route::get('/classes/{classId}/subjects', [AcademicController::class, 'getSubjects']);
+        Route::get('/sections', [AcademicController::class, 'indexSection']);
     });
 
 
-    // --- 2. Teacher Module ---
+    // --- 2. Teacher Module (Updated) ---
     Route::prefix('teachers')->group(function () {
-        Route::get('/', [TeacherController::class, 'index']);
-        Route::post('/', [TeacherController::class, 'store']);
+        Route::get('/', [TeacherController::class, 'index']);          // সব টিচার দেখা
+        Route::post('/', [TeacherController::class, 'store']);         // নতুন টিচার তৈরি
+        Route::get('/{id}', [TeacherController::class, 'show']);       // ✅ নির্দিষ্ট টিচার দেখা (Edit এর জন্য)
+        Route::put('/{id}', [TeacherController::class, 'update']);     // ✅ টিচার আপডেট করা
+        Route::delete('/{id}', [TeacherController::class, 'destroy']); // ✅ টিচার ডিলিট করা
     });
 
 
@@ -60,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('routines')->group(function () {
         Route::post('/', [RoutineController::class, 'store']);
         Route::get('/section/{sectionId}', [RoutineController::class, 'getBySection']);
+        Route::get('/', [RoutineController::class, 'index']);
+        Route::delete('/routines/{id}', [RoutineController::class, 'destroy']);
     });
 
 
@@ -82,7 +91,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // --- 6. Exam Module ---
-    // নোট: টেস্ট ফাইলের সাথে মিল রাখতে রুটগুলো বাইরে রাখা হয়েছে
     Route::post('/exams', [ExamController::class, 'store']);
     Route::post('/marks', [ExamController::class, 'storeMarks']);
     
@@ -101,8 +109,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 8. HR Module ---
     Route::prefix('hr')->group(function () {
-        Route::post('/designations', [HRController::class, 'storeDesignation']); // ✅ টেস্টে ব্যবহৃত
-        Route::post('/payroll/pay', [HRController::class, 'paySalary']);       // ✅ টেস্টে ব্যবহৃত
+        Route::post('/designations', [HRController::class, 'storeDesignation']); 
+        Route::post('/payroll/pay', [HRController::class, 'paySalary']);       
         Route::post('/payroll', [HRController::class, 'storePayroll']);
         Route::post('/leave', [HRController::class, 'storeLeave']);
         Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
@@ -111,29 +119,26 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 9. Library Module ---
     Route::prefix('library')->group(function () {
-        Route::post('/books', [LibraryController::class, 'storeBook']); // ✅ টেস্টে ব্যবহৃত
-        Route::post('/issue', [LibraryController::class, 'issue']);     // ✅ টেস্টে ব্যবহৃত
+        Route::post('/books', [LibraryController::class, 'storeBook']); 
+        Route::post('/issue', [LibraryController::class, 'issue']);     
         Route::post('/return/{id}', [LibraryController::class, 'returnBook']);
     });
 
 
     // --- 10. Notice Board Module ---
     Route::prefix('notices')->group(function () {
-        Route::get('/', [NoticeController::class, 'index']);  // ✅ টেস্টে ব্যবহৃত (সব নোটিশ দেখা)
-        Route::post('/', [NoticeController::class, 'store']); // ✅ টেস্টে ব্যবহৃত (নোটিশ তৈরি)
+        Route::get('/', [NoticeController::class, 'index']);  
+        Route::post('/', [NoticeController::class, 'store']); 
     });
+
     // --- 11. Expense Module ---
     Route::prefix('expenses')->group(function () {
-        Route::post('/categories', [ExpenseController::class, 'storeCategory']); // ক্যাটাগরি তৈরি
-        Route::post('/', [ExpenseController::class, 'storeExpense']); // খরচ যোগ করা
+        Route::post('/categories', [ExpenseController::class, 'storeCategory']); 
+        Route::post('/', [ExpenseController::class, 'storeExpense']); 
     });
-    // --- 12. Dashboard Module (Organized) ---
+
+    // --- 12. Dashboard Module ---
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
     });
-        
-
 });
-
-
-

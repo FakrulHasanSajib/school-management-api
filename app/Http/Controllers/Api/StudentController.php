@@ -50,15 +50,38 @@ class StudentController extends Controller
      * ]
      * }
      */
-    public function index(): JsonResponse
-    {
-        $students = $this->studentService->getAllStudents();
-        
-        return $this->success(
-            StudentResource::collection($students), 
-            'Student list fetched successfully'
-        );
+   public function index(Request $request): JsonResponse
+{
+    // ১. স্টুডেন্ট কুয়েরি শুরু করা
+    $query = \App\Models\StudentProfile::with(['user', 'schoolClass', 'section']);
+
+    // ২. নাম বা ইমেইল দিয়ে সার্চ (Search by Name/Email)
+    if ($request->has('search')) {
+        $search = $request->search;
+        $query->whereHas('user', function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('email', 'like', "%{$search}%");
+        })->orWhere('admission_no', 'like', "%{$search}%");
     }
+
+    // ৩. ক্লাস অনুযায়ী ফিল্টার (Filter by Class)
+    if ($request->has('class_id')) {
+        $query->where('class_id', $request->class_id);
+    }
+
+    // ৪. সেকশন অনুযায়ী ফিল্টার (Filter by Section)
+    if ($request->has('section_id')) {
+        $query->where('section_id', $request->section_id);
+    }
+
+    // ৫. ডাটা গেট করা
+    $students = $query->latest()->get();
+    
+    return $this->success(
+        StudentResource::collection($students), 
+        'Student list fetched successfully'
+    );
+}
 
     public function store(StoreStudentRequest $request): JsonResponse
     {
@@ -147,9 +170,9 @@ public function getNextNumbers(Request $request): JsonResponse
         $nextRollNo = $lastRoll ? (int)$lastRoll + 1 : 1;
     }
 
-    return response()->json([
-        'next_admission_no' => $nextAdmissionNo,
-        'next_roll_no' => $nextRollNo
-    ]);
+   return $this->success([
+    'next_admission_no' => $nextAdmissionNo,
+    'next_roll_no' => $nextRollNo
+], 'Next numbers generated');
 }
 }

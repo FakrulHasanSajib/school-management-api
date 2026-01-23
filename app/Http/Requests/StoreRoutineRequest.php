@@ -14,10 +14,14 @@ class StoreRoutineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'class_id' => 'required|exists:classes,id',
+            // ✅ আপনার টেবিল লিস্ট অনুযায়ী নাম ঠিক করা হলো
+            'class_id' => 'required|exists:classes,id', 
             'section_id' => 'required|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
-            'teacher_id' => 'required|exists:teacher_profiles,id',
+            
+            // ✅ টিচার চেক হবে 'users' টেবিলে
+            'teacher_id' => 'required|exists:users,id', 
+
             'day' => 'required|in:Saturday,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',

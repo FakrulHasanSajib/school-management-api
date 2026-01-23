@@ -12,6 +12,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles; // 3. এখানে নামগুলো ব্যবহার করুন
+    protected $guard_name = 'api';
 
     protected $fillable = [
         'name',
