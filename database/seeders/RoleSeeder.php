@@ -12,7 +12,7 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Spatie Permission এর ক্যাশ ক্লিয়ার করা (Best Practice)
+        // Spatie Permission এর ক্যাশ ক্লিয়ার করা
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // রোলগুলোর তালিকা
@@ -22,12 +22,16 @@ class RoleSeeder extends Seeder
             'teacher',
             'student',
             'parent',
-            'accountant', // ভবিষ্যতে লাগতে পারে তাই যুক্ত করলাম
+            'accountant',
         ];
 
-        // লুপ চালিয়ে রোল তৈরি করা হচ্ছে
+        // লুপ চালিয়ে রোল তৈরি করা হচ্ছে
         foreach ($roles as $role) {
+            // ১. Web গার্ডের জন্য (ব্লেড ফাইলের জন্য)
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);
+            
+            // ২. ✅ API গার্ডের জন্য (Vue/React বা Sanctum এর জন্য - এটা মাস্ট লাগবে)
+            Role::firstOrCreate(['name' => $role, 'guard_name' => 'api']);
         }
     }
 }

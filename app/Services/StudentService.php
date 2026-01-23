@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\StudentProfile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class StudentService
 {
@@ -17,6 +18,13 @@ class StudentService
     public function createStudent(array $data)
     {
         return DB::transaction(function () use ($data) {
+
+        // ✅ ১. ছবি আপলোড লজিক
+        if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+            // 'students' ফোল্ডারে ছবি সেভ হবে (public ডিস্কে)
+            $path = $data['image']->store('students', 'public');
+            $data['image'] = $path;
+        }
             // ১. ইউজার তৈরি
             $user = User::create([
                 'name' => $data['name'],
@@ -39,6 +47,9 @@ class StudentService
                 'dob' => $data['dob'],
                 'address' => $data['address'] ?? null,
                 'parent_id' => $data['parent_id'] ?? null,
+                'phone' => $data['phone'] ?? null,
+            'blood_group' => $data['blood_group'] ?? null,
+            'image' => $data['image'] ?? null, // ছবির পাথ
             ]);
         });
     }
@@ -58,6 +69,16 @@ class StudentService
         $student = StudentProfile::findOrFail($id);
         
         return DB::transaction(function () use ($student, $data) {
+
+        if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+            // আগের ছবি ডিলিট করা
+            if ($student->image) {
+                Storage::disk('public')->delete($student->image);
+            }
+            // নতুন ছবি আপলোড
+            $path = $data['image']->store('students', 'public');
+            $data['image'] = $path;
+        }
             // ইউজার আপডেট
             $student->user->update([
                 'name' => $data['name'],
@@ -66,9 +87,17 @@ class StudentService
 
             // প্রোফাইল আপডেট
             $student->update([
-                'class_id' => $data['class_id'],
-                'section_id' => $data['section_id'],
-                'roll_no' => $data['roll_no'],
+               'class_id' => $data['class_id'],
+            'section_id' => $data['section_id'],
+            'roll_no' => $data['roll_no'],
+            'gender' => $data['gender'],
+            'dob' => $data['dob'],
+            'address' => $data['address'],
+            
+            // ✅ নতুন ডাটা
+            'phone' => $data['phone'] ?? $student->phone,
+            'blood_group' => $data['blood_group'] ?? $student->blood_group,
+            'image' => $data['image'] ?? $student->image,
                 // অন্যান্য ফিল্ড...
             ]);
 

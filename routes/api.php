@@ -68,7 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [RoutineController::class, 'store']);
         Route::get('/section/{sectionId}', [RoutineController::class, 'getBySection']);
         Route::get('/', [RoutineController::class, 'index']);
-        Route::delete('/routines/{id}', [RoutineController::class, 'destroy']);
+        Route::delete('/{id}', [RoutineController::class, 'destroy']);
+        Route::get('/{id}', [RoutineController::class, 'show']);       // ✅ ১টি রুটিন দেখা (Edit এর জন্য)
+        Route::put('/{id}', [RoutineController::class, 'update']);
     });
 
 

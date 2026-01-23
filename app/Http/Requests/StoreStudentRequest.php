@@ -53,6 +53,9 @@ class StoreStudentRequest extends FormRequest
             'roll_no' => 'required', // String/Number দুটোই সাপোর্ট করবে
             'gender' => 'required|in:Male,Female,Other',
             'dob' => 'required|date',
+            'phone' => 'nullable|string|max:15', // ফোন নাম্বার
+        'blood_group' => 'nullable|string|in:A+,A-,B+,B-,AB+,AB-,O+,O-', // নির্দিষ্ট ব্লাড গ্রুপ
+        'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
 
             // 👇 আপনার রিকোয়ারমেন্ট অনুযায়ী address এখন required
             'address' => 'required|string|max:500', 

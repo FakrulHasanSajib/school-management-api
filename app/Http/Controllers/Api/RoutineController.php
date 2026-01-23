@@ -8,6 +8,7 @@ use App\Services\RoutineService;
 use App\Models\Routine;
 use Illuminate\Http\JsonResponse;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 
 class RoutineController extends Controller
 {
@@ -23,21 +24,29 @@ class RoutineController extends Controller
     /**
      * ✅ ১. সব রুটিন দেখার API (List)
      */
-    public function index(): JsonResponse
+   // ✅ ১. সব রুটিন দেখার API (Filter সহ)
+    public function index(Request $request): JsonResponse
     {
         try {
-            // আমরা 'schoolClass' রিলেশন ব্যবহার করছি কারণ আপনার মডেলের নাম SchoolClass.php
-            // ফ্রন্টএন্ডে এটি অটোমেটিক 'school_class' হয়ে যাবে।
-            $routines = Routine::with(['schoolClass', 'section', 'subject', 'teacher'])
-                        ->latest()
-                        ->get();
+            $query = Routine::with(['schoolClass', 'section', 'subject', 'teacher']);
+
+            // যদি ক্লাস সিলেক্ট করা থাকে
+            if ($request->class_id) {
+                $query->where('class_id', $request->class_id);
+            }
+
+            // যদি সেকশন সিলেক্ট করা থাকে
+            if ($request->section_id) {
+                $query->where('section_id', $request->section_id);
+            }
+
+            $routines = $query->latest()->get();
             
             return $this->success($routines, 'Routine list fetched successfully');
         } catch (\Exception $e) {
             return $this->error('Server Error: ' . $e->getMessage(), 500);
         }
     }
-
     /**
      * ✅ ২. নতুন রুটিন তৈরি করার API (Create with Validation)
      */
@@ -54,6 +63,29 @@ class RoutineController extends Controller
                 'status' => false,
                 'message' => $e->getMessage()
             ], 422);
+        }
+    }
+
+    // ✅ নির্দিষ্ট একটি রুটিন দেখার জন্য (Edit পেজে ডাটা লোড করতে লাগবে)
+    public function show($id): JsonResponse
+    {
+        try {
+            $routine = Routine::findOrFail($id);
+            return $this->success($routine, 'Routine fetched successfully');
+        } catch (\Exception $e) {
+            return $this->error('Routine not found', 404);
+        }
+    }
+
+    // ✅ রুটিন আপডেট করার জন্য
+    public function update(StoreRoutineRequest $request, $id): JsonResponse
+    {
+        try {
+            $routine = $this->routineService->updateRoutine($id, $request->validated());
+            return $this->success($routine, 'Routine updated successfully');
+        } catch (\Exception $e) {
+            // কনফ্লিক্ট হলে 422 এরর রিটার্ন করবে
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 422);
         }
     }
 

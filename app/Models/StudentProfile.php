@@ -12,7 +12,7 @@ class StudentProfile extends Model
     use HasFactory;
     protected $fillable = [
         'user_id', 'class_id', 'section_id', 'parent_id', 
-        'admission_no', 'roll_no', 'dob', 'gender', 'address'
+        'admission_no', 'roll_no', 'dob', 'gender', 'address','phone', 'blood_group', 'image'
     ]; 
 
     // রিলেশনশিপ
