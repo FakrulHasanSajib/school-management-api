@@ -15,6 +15,10 @@ class TeacherService
     public function createTeacher(array $data)
     {
         return DB::transaction(function () use ($data) {
+            $imagePath = null;
+        if (isset($data['image'])) {
+            $imagePath = $data['image']->store('teachers', 'public'); // ✅ ছবি সেভ
+        }
             // ১. ইউজার একাউন্ট তৈরি
             $user = User::create([
                 'name' => $data['name'],
@@ -34,6 +38,8 @@ class TeacherService
                 'qualification' => $data['qualification'],
                 'phone' => $data['phone'],
                 'joining_date' => $data['joining_date'],
+                'image' => $imagePath,
+                'blood_group' => $data['blood_group'],
                 // যদি gender সেভ করতে চান, তবে এখানে 'gender' => $data['gender'] দিতে হবে
                 // এবং StoreTeacherRequest এ gender এর ভ্যালিডেশন যোগ করতে হবে।
             ]);

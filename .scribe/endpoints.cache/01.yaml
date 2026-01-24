@@ -7,6 +7,98 @@ endpoints:
     custom: []
     httpMethods:
       - GET
+    uri: 'api/academic/classes/{classId}/sections'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: '✅ নির্দিষ্ট ক্লাসের আন্ডারে থাকা সেকশনগুলো দেখার জন্য'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      classId:
+        custom: []
+        name: classId
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      classId: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status":true,"message":"Sections for this class fetched successfully","data":[]}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/students/next-numbers
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: '{"status":true,"message":"Next numbers generated","data":{"next_admission_no":"ADM-0004","next_roll_no":1}}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
     uri: api/user
     metadata:
       custom: []
@@ -15,6 +107,46 @@ endpoints:
       subgroup: ''
       subgroupDescription: ''
       title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/academic/classes
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: '✅ API.php এর সাথে মিল রেখে নাম পরিবর্তন: index -> indexClass'
       description: ''
       authenticated: false
       deprecated: false
@@ -224,9 +356,9 @@ endpoints:
       type:
         custom: []
         name: type
-        description: 'সাবজেক্ট কোড ইউনিক হতে হবে.'
+        description: ''
         required: true
-        example: Theory
+        example: Practical
         type: string
         enumValues:
           - Theory
@@ -238,7 +370,7 @@ endpoints:
       class_id: consequatur
       name: consequatur
       code: consequatur
-      type: Theory
+      type: Practical
     fileParameters: []
     responses: []
     responseFields: []
@@ -302,6 +434,46 @@ endpoints:
     custom: []
     httpMethods:
       - GET
+    uri: api/academic/sections
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: '✅ নতুন মেথড: সব সেকশন দেখার জন্য (স্টুডেন্ট ফর্মের জন্য লাগবে)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
     uri: api/teachers
     metadata:
       custom: []
@@ -309,7 +481,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'সব শিক্ষকের লিস্ট দেখার API'
       description: ''
       authenticated: false
       deprecated: false
@@ -349,7 +521,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'নতুন শিক্ষক তৈরি করার API'
       description: ''
       authenticated: false
       deprecated: false
@@ -432,7 +604,7 @@ endpoints:
         name: joining_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -445,7 +617,240 @@ endpoints:
       designation: consequatur
       qualification: consequatur
       phone: consequatur
-      joining_date: '2026-01-22T15:29:36'
+      joining_date: '2026-01-24T13:36:36'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/teachers/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'নির্দিষ্ট টিচারের তথ্য দেখানো (Show/Edit Page)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the teacher.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/teachers/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'টিচারের তথ্য আপডেট করা (Update)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the teacher.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 255 characters.'
+        required: true
+        example: vmqeopfuudtdsufvyvddq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      designation:
+        custom: []
+        name: designation
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      image:
+        custom: []
+        name: image
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      blood_group:
+        custom: []
+        name: blood_group
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      qualification:
+        custom: []
+        name: qualification
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      joining_date:
+        custom: []
+        name: joining_date
+        description: 'Must be a valid date.'
+        required: true
+        example: '2026-01-24T13:36:37'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: vmqeopfuudtdsufvyvddq
+      designation: consequatur
+      phone: consequatur
+      blood_group: consequatur
+      qualification: consequatur
+      joining_date: '2026-01-24T13:36:37'
+    fileParameters:
+      image: null
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/teachers/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'শিক্ষক ডিলিট করা (Delete)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the teacher.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses: []
     responseFields: []
@@ -464,7 +869,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: '✅ ২. নতুন রুটিন তৈরি করার API (Create with Validation)'
       description: ''
       authenticated: false
       deprecated: false
@@ -512,7 +917,7 @@ endpoints:
       teacher_id:
         custom: []
         name: teacher_id
-        description: 'The <code>id</code> of an existing record in the teacher_profiles table.'
+        description: 'The <code>id</code> of an existing record in the users table.'
         required: true
         example: consequatur
         type: string
@@ -525,7 +930,7 @@ endpoints:
         name: day
         description: ''
         required: true
-        example: Monday
+        example: Saturday
         type: string
         enumValues:
           - Saturday
@@ -543,7 +948,7 @@ endpoints:
         name: start_time
         description: 'Must be a valid date in the format <code>H:i</code>.'
         required: true
-        example: '15:29'
+        example: '13:36'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -554,7 +959,7 @@ endpoints:
         name: end_time
         description: 'Must be a valid date in the format <code>H:i</code>. Must be a date after <code>start_time</code>.'
         required: true
-        example: '2107-02-21'
+        example: '2107-02-23'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -565,9 +970,9 @@ endpoints:
       section_id: consequatur
       subject_id: consequatur
       teacher_id: consequatur
-      day: Monday
-      start_time: '15:29'
-      end_time: '2107-02-21'
+      day: Saturday
+      start_time: '13:36'
+      end_time: '2107-02-23'
     fileParameters: []
     responses: []
     responseFields: []
@@ -586,7 +991,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: '✅ ৩. নির্দিষ্ট সেকশনের রুটিন দেখার API (Optional Feature)'
       description: ''
       authenticated: false
       deprecated: false
@@ -599,14 +1004,14 @@ endpoints:
         name: sectionId
         description: ''
         required: true
-        example: consequatur
-        type: string
+        example: 1
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      sectionId: consequatur
+      sectionId: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -630,8 +1035,277 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/routines
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: '✅ ১. সব রুটিন দেখার API (List)'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/routines/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the routine.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/routines/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the routine.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/routines/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the routine.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      class_id:
+        custom: []
+        name: class_id
+        description: 'The <code>id</code> of an existing record in the classes table.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      section_id:
+        custom: []
+        name: section_id
+        description: 'The <code>id</code> of an existing record in the sections table.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      subject_id:
+        custom: []
+        name: subject_id
+        description: 'The <code>id</code> of an existing record in the subjects table.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      teacher_id:
+        custom: []
+        name: teacher_id
+        description: 'The <code>id</code> of an existing record in the users table.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      day:
+        custom: []
+        name: day
+        description: ''
+        required: true
+        example: Tuesday
+        type: string
+        enumValues:
+          - Saturday
+          - Sunday
+          - Monday
+          - Tuesday
+          - Wednesday
+          - Thursday
+          - Friday
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      start_time:
+        custom: []
+        name: start_time
+        description: 'Must be a valid date in the format <code>H:i</code>.'
+        required: true
+        example: '13:36'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      end_time:
+        custom: []
+        name: end_time
+        description: 'Must be a valid date in the format <code>H:i</code>. Must be a date after <code>start_time</code>.'
+        required: true
+        example: '2107-02-23'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      class_id: consequatur
+      section_id: consequatur
+      subject_id: consequatur
+      teacher_id: consequatur
+      day: Tuesday
+      start_time: '13:36'
+      end_time: '2107-02-23'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
-    uri: api/attendance
+    uri: api/attendance/store
     metadata:
       custom: []
       groupName: Endpoints
@@ -677,7 +1351,7 @@ endpoints:
         name: date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -720,14 +1394,26 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
+      'attendances[].remarks':
+        custom: []
+        name: 'attendances[].remarks'
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       class_id: consequatur
       section_id: consequatur
-      date: '2026-01-22T15:29:36'
+      date: '2026-01-24T13:36:37'
       attendances:
         -
           student_id: consequatur
           status: Absent
+          remarks: consequatur
     fileParameters: []
     responses: []
     responseFields: []
@@ -758,6 +1444,17 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
+      class_id:
+        custom: []
+        name: class_id
+        description: 'The <code>id</code> of an existing record in the classes table.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
       section_id:
         custom: []
         name: section_id
@@ -769,20 +1466,109 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      date:
+      month:
         custom: []
-        name: date
-        description: 'Must be a valid date.'
+        name: month
+        description: 'Must be between 1 and 12.'
         required: true
-        example: '2026-01-22T15:29:36'
-        type: string
+        example: 1
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      year:
+        custom: []
+        name: year
+        description: ''
+        required: true
+        example: 11613.31890586
+        type: number
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
+      class_id: consequatur
       section_id: consequatur
-      date: '2026-01-22T15:29:36'
+      month: 1
+      year: 11613.31890586
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/attendance/student/{studentId}/report-card'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      studentId:
+        custom: []
+        name: studentId
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      studentId: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      month:
+        custom: []
+        name: month
+        description: 'Must be between 1 and 12.'
+        required: true
+        example: 2
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      year:
+        custom: []
+        name: year
+        description: ''
+        required: true
+        example: 11613.31890586
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      month: 2
+      year: 11613.31890586
     fileParameters: []
     responses:
       -
@@ -815,7 +1601,7 @@ endpoints:
       authenticated: false
       deprecated: false
     headers:
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
@@ -918,18 +1704,59 @@ endpoints:
         name: dob
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Must not be greater than 15 characters.'
+        required: false
+        example: mqeopfuudtdsu
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      blood_group:
+        custom: []
+        name: blood_group
+        description: ''
+        required: false
+        example: A+
+        type: string
+        enumValues:
+          - A+
+          - A-
+          - B+
+          - B-
+          - AB+
+          - AB-
+          - O+
+          - O-
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      image:
+        custom: []
+        name: image
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
       address:
         custom: []
         name: address
         description: 'Must not be greater than 500 characters.'
         required: true
-        example: mqeopfuudtdsufvyvddqa
+        example: fvyvddqamniihfqcoynla
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -944,9 +1771,12 @@ endpoints:
       admission_no: consequatur
       roll_no: consequatur
       gender: Other
-      dob: '2026-01-22T15:29:36'
-      address: mqeopfuudtdsufvyvddqa
-    fileParameters: []
+      dob: '2026-01-24T13:36:37'
+      phone: mqeopfuudtdsu
+      blood_group: A+
+      address: fvyvddqamniihfqcoynla
+    fileParameters:
+      image: null
     responses: []
     responseFields: []
     auth: []
@@ -1020,14 +1850,14 @@ endpoints:
         name: section_id
         description: 'The ID of the section.'
         required: true
-        example: consequatur
-        type: string
+        example: 1
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      section_id: consequatur
+      section_id: 1
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -1116,7 +1946,7 @@ endpoints:
       authenticated: false
       deprecated: false
     headers:
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
       id:
@@ -1160,9 +1990,9 @@ endpoints:
       password:
         custom: []
         name: password
-        description: ''
+        description: 'Must be at least 6 characters.'
         required: false
-        example: null
+        example: '4[*UyPJ"}6'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1217,7 +2047,7 @@ endpoints:
         name: gender
         description: ''
         required: true
-        example: Other
+        example: Female
         type: string
         enumValues:
           - Male
@@ -1231,18 +2061,59 @@ endpoints:
         name: dob
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Must not be greater than 15 characters.'
+        required: false
+        example: mqeopfuudtdsu
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      blood_group:
+        custom: []
+        name: blood_group
+        description: ''
+        required: false
+        example: A+
+        type: string
+        enumValues:
+          - A+
+          - A-
+          - B+
+          - B-
+          - AB+
+          - AB-
+          - O+
+          - O-
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      image:
+        custom: []
+        name: image
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
       address:
         custom: []
         name: address
         description: 'Must not be greater than 500 characters.'
         required: true
-        example: mqeopfuudtdsufvyvddqa
+        example: fvyvddqamniihfqcoynla
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1251,13 +2122,60 @@ endpoints:
     cleanBodyParameters:
       name: vmqeopfuudtdsufvyvddq
       email: kunde.eloisa@example.com
+      password: '4[*UyPJ"}6'
       class_id: consequatur
       section_id: consequatur
       admission_no: consequatur
       roll_no: consequatur
-      gender: Other
-      dob: '2026-01-22T15:29:36'
-      address: mqeopfuudtdsufvyvddqa
+      gender: Female
+      dob: '2026-01-24T13:36:37'
+      phone: mqeopfuudtdsu
+      blood_group: A+
+      address: fvyvddqamniihfqcoynla
+    fileParameters:
+      image: null
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/students/{id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Delete Student'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the student.'
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: consequatur
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses: []
     responseFields: []
@@ -1315,7 +2233,7 @@ endpoints:
         name: due_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1324,7 +2242,7 @@ endpoints:
     cleanBodyParameters:
       student_id: consequatur
       fee_type_id: consequatur
-      due_date: '2026-01-22T15:29:36'
+      due_date: '2026-01-24T13:36:37'
     fileParameters: []
     responses: []
     responseFields: []
@@ -1698,7 +2616,7 @@ endpoints:
         name: return_date
         description: '✅ Nullable নয়, Required. Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1707,7 +2625,7 @@ endpoints:
     cleanBodyParameters:
       book_id: consequatur
       student_id: consequatur
-      return_date: '2026-01-22T15:29:36'
+      return_date: '2026-01-24T13:36:37'
     fileParameters: []
     responses: []
     responseFields: []
@@ -1805,7 +2723,7 @@ endpoints:
         name: published_at
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1816,7 +2734,7 @@ endpoints:
         name: recipient_type
         description: ''
         required: true
-        example: all
+        example: student
         type: string
         enumValues:
           - all
@@ -1828,8 +2746,8 @@ endpoints:
     cleanBodyParameters:
       title: consequatur
       content: consequatur
-      published_at: '2026-01-22T15:29:36'
-      recipient_type: all
+      published_at: '2026-01-24T13:36:37'
+      recipient_type: student
     fileParameters: []
     responses: []
     responseFields: []
@@ -1942,7 +2860,7 @@ endpoints:
         name: expense_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1962,7 +2880,7 @@ endpoints:
     cleanBodyParameters:
       expense_category_id: consequatur
       amount: 45
-      expense_date: '2026-01-22T15:29:36'
+      expense_date: '2026-01-24T13:36:37'
       description: 'Dolores dolorum amet iste laborum eius est dolor.'
     fileParameters: []
     responses: []
@@ -2006,6 +2924,113 @@ endpoints:
           content-type: application/json
           access-control-allow-origin: '*'
         description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/general-settings
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/general-settings/update
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      school_name:
+        custom: []
+        name: school_name
+        description: ''
+        required: true
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      school_logo:
+        custom: []
+        name: school_logo
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      principal_signature:
+        custom: []
+        name: principal_signature
+        description: 'Must be an image. Must not be greater than 2048 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      school_name: consequatur
+    fileParameters:
+      school_logo: null
+      principal_signature: null
+    responses: []
     responseFields: []
     auth: []
     controller: null

@@ -23,6 +23,7 @@ public function rules(): array
         'attendances' => 'required|array', 
         'attendances.*.student_id' => 'required|exists:student_profiles,id',
         'attendances.*.status' => 'required|in:Present,Absent,Late',
+        'attendances.*.remarks' => 'nullable|string',
     ];
 }
 }

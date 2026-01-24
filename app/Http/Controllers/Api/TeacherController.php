@@ -8,7 +8,22 @@ use App\Http\Requests\StoreTeacherRequest;
 use Illuminate\Http\Request; // ✅ এটি মিসিং ছিল
 use App\Models\User;         // ✅ এটি মিসিং ছিল
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB; // ট্রানজেকশনের জন্য
+use Illuminate\Support\Facades\DB;
+use App\Traits\ApiResponse;
+use App\Models\TeacherProfile;
+use Exception;
+use Throwable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB as FacadesDB;
+
+ // ট্রানজেকশনের জন্য
 
 class TeacherController extends Controller
 {
@@ -58,43 +73,60 @@ class TeacherController extends Controller
     /**
      * টিচারের তথ্য আপডেট করা (Update)
      */
-    public function update(Request $request, $id): JsonResponse
-    {
-        // ১. বেসিক ভ্যালিডেশন (এখানেই রাখা হলো যাতে দ্রুত কাজ করে)
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id, // নিজের ইমেইল বাদ দিয়ে ইউনিক চেক
-            'designation' => 'required|string',
-            'phone' => 'required|string',
-        ]);
+  public function update(Request $request, $id): JsonResponse
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'designation' => 'required|string',
+        'phone' => 'required|string',
+        'image' => 'nullable|image|max:2048', 
+        'blood_group' => 'nullable|string',
+        'qualification' => 'required|string',
+        'joining_date' => 'required|date',
+    ]);
 
-        try {
-            DB::transaction(function () use ($request, $id) {
-                $user = User::findOrFail($id);
+    try {
+        DB::transaction(function () use ($request, $id) {
+            $user = User::findOrFail($id);
 
-                // User টেবিল আপডেট
-                $user->update([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                ]);
+            // User টেবিল আপডেট
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
 
-                // TeacherProfile টেবিল আপডেট (যদি প্রোফাইল থাকে)
-                if ($user->teacherProfile) {
-                    $user->teacherProfile()->update([
-                        'designation' => $request->designation,
-                        'qualification' => $request->qualification,
-                        'phone' => $request->phone,
-                        'joining_date' => $request->joining_date,
-                    ]);
+            // ১. আগে সব ডাটা একটি অ্যারেতে গুছিয়ে নিন
+            $updateData = [
+                'designation' => $request->designation,
+                'qualification' => $request->qualification,
+                'phone' => $request->phone,
+                'joining_date' => $request->joining_date,
+                'blood_group' => $request->blood_group,
+            ];
+
+            // ২. যদি নতুন ছবি থাকে, তবে সেটা প্রোসেস করুন
+            if ($request->hasFile('image')) {
+                // পুরনো ছবি থাকলে ডিলিট করুন
+                if ($user->teacherProfile && $user->teacherProfile->image) {
+                    Storage::disk('public')->delete($user->teacherProfile->image);
                 }
-            });
+                // নতুন ছবির পাথ অ্যারেতে যোগ করুন
+                $updateData['image'] = $request->file('image')->store('teachers', 'public');
+            }
 
-            return $this->success(null, 'Teacher updated successfully');
+            // ৩. এবার একসাথে সব ডাটা আপডেট করুন
+            if ($user->teacherProfile) {
+                $user->teacherProfile()->update($updateData);
+            }
+        });
 
-        } catch (\Exception $e) {
-            return $this->error('Failed to update teacher: ' . $e->getMessage(), 500);
-        }
+        return $this->success(null, 'Teacher updated successfully');
+
+    } catch (\Exception $e) {
+        return $this->error('Failed to update teacher: ' . $e->getMessage(), 500);
     }
+}
 
     /**
      * শিক্ষক ডিলিট করা (Delete)

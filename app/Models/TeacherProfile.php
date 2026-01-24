@@ -11,7 +11,8 @@ class TeacherProfile extends Model
         'designation',   // e.g., Senior Teacher
         'qualification', // e.g., M.Sc in Math
         'phone', 
-        'joining_date'
+        'joining_date',
+        'blood_group', 'image'
     ];
 
     // ইউজারের সাথে সম্পর্ক

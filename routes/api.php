@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\LibraryController;
 use App\Http\Controllers\Api\NoticeController; 
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
+use App\Http\Controllers\Api\GeneralSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,8 +77,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 4. Attendance Module ---
     Route::prefix('attendance')->group(function () {
-        Route::post('/', [AttendanceController::class, 'store']);
-        Route::get('/report', [AttendanceController::class, 'report']);
+        Route::post('/store', [AttendanceController::class, 'store']); 
+    Route::get('/report', [AttendanceController::class, 'report']);
+    Route::get('/student/{studentId}/report-card', [AttendanceController::class, 'studentReportCard']);
     });
 
 
@@ -142,5 +144,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- 12. Dashboard Module ---
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
+    });
+
+    // --- 13. General  Settings ---
+    Route::prefix('general-settings')->group(function () {
+    Route::get('/', [GeneralSettingController::class, 'index']); // ডাটা দেখার জন্য
+    Route::post('/update', [GeneralSettingController::class, 'update']); // আপডেট + ফাইল আপলোডের জন্য POST নিরাপদ
     });
 });

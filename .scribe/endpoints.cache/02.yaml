@@ -68,7 +68,7 @@ endpoints:
         name: start_date
         description: "'session' এর বদলে class_id সাধারণত বেশি ব্যবহৃত হয়, আপনার মাইগ্রেশন চেক করবেন. Must be a valid date."
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -79,7 +79,7 @@ endpoints:
         name: end_date
         description: 'Must be a valid date.'
         required: true
-        example: '2026-01-22T15:29:36'
+        example: '2026-01-24T13:36:37'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -89,8 +89,8 @@ endpoints:
       name: consequatur
       class_id: consequatur
       session: consequatur
-      start_date: '2026-01-22T15:29:36'
-      end_date: '2026-01-22T15:29:36'
+      start_date: '2026-01-24T13:36:37'
+      end_date: '2026-01-24T13:36:37'
     fileParameters: []
     responses: []
     responseFields: []
