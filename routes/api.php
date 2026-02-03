@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\NoticeController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\GeneralSettingController;
+use App\Http\Controllers\Api\ResultController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 1. Academic Module ---
     Route::prefix('academic')->group(function () {
-        Route::get('/classes', [AcademicController::class, 'indexClass']); // ড্রপডাউনের জন্য জরুরি
+        Route::get('/classes', [AcademicController::class, 'indexClass']);
         Route::post('/classes', [AcademicController::class, 'storeClass']);
         Route::post('/sections', [AcademicController::class, 'storeSection']);
         Route::post('/subjects', [AcademicController::class, 'storeSubject']);
@@ -86,25 +87,38 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [StudentController::class, 'show']);
         Route::put('/{id}', [StudentController::class, 'update']);
         Route::delete('/{id}', [StudentController::class, 'destroy']);
+        // ⚠️ এখান থেকে ভুল রাউটটি সরিয়ে নিচে নেওয়া হয়েছে
     });
 
-    // --- 6. Exam Module (Fixed Syntax) ---
-    // এখানে কোনো আলাদা prefix গ্রুপ নেই, সরাসরি রুটগুলো ডিফাইন করা হয়েছে
-    Route::get('/exams', [ExamController::class, 'index']); // লিস্ট দেখা
-    Route::post('/exams', [ExamController::class, 'store']); // নতুন এক্সাম
-    Route::post('/marks', [ExamController::class, 'storeMarks']); // মার্কস সেভ
-    Route::get('/exams/{exam_id}/results/{student_id}', [ExamController::class, 'getStudentResult']); // রেজাল্ট
-    Route::get('/exams/{id}', [ExamController::class, 'show']); // নির্দিষ্ট এক্সাম
-    Route::put('/exams/{id}', [ExamController::class, 'update']); // আপডেট
+    // --- 6. Exam Module ---
+    Route::get('/exams', [ExamController::class, 'index']); 
+    Route::post('/exams', [ExamController::class, 'store']); 
+    Route::post('/marks', [ExamController::class, 'storeMarks']); 
+    // পুরানো ভুল রাউট থাকলে বাদ দিতে পারেন, নিচে নতুন করে Result Module এ দেওয়া হয়েছে
+    Route::get('/exams/{id}', [ExamController::class, 'show']); 
+    Route::put('/exams/{id}', [ExamController::class, 'update']); 
 
-    // --- 7. Accounts Module ---
+    // --- ✅ 7. Result Module (New Fixed Route) ---
+    // এই রাউটটি এখন ফ্রন্টএন্ডের লিংকের সাথে মিলবে (/api/results/...)
+    Route::get('/results/exam/{exam_id}/student/{student_id}', [ResultController::class, 'getStudentResult']);
+    Route::get('/results/tabulation/exam/{exam_id}/section/{section_id}', [ResultController::class, 'getTabulationSheet']);
+
+
+    // --- 8. Accounts Module ---
     Route::prefix('accounts')->group(function () {
         Route::post('/invoices', [AccountController::class, 'generateInvoice']);
         Route::post('/payments', [AccountController::class, 'payInvoice']);
         Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']);
+        Route::get('/fee-types', [AccountController::class, 'getFeeTypes']); // লিস্ট
+        Route::post('/fee-types', [AccountController::class, 'storeFeeType']); // তৈরি
+        // ইনভয়েস ও পেমেন্ট
+        Route::post('/invoices', [AccountController::class, 'generateInvoice']); // ইনভয়েস তৈরি
+        Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']); // ছাত্রের বকেয়া দেখা
+        Route::post('/payments', [AccountController::class, 'payInvoice']); // টাকা জমা দেওয়া
+        Route::get('/history', [AccountController::class, 'getAllInvoices']);
     });
 
-    // --- 8. HR Module ---
+    // --- 9. HR Module ---
     Route::prefix('hr')->group(function () {
         Route::post('/designations', [HRController::class, 'storeDesignation']);
         Route::post('/payroll/pay', [HRController::class, 'paySalary']);
@@ -113,31 +127,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
     });
 
-    // --- 9. Library Module ---
+    // --- 10. Library Module ---
     Route::prefix('library')->group(function () {
         Route::post('/books', [LibraryController::class, 'storeBook']);
         Route::post('/issue', [LibraryController::class, 'issue']);
         Route::post('/return/{id}', [LibraryController::class, 'returnBook']);
     });
 
-    // --- 10. Notice Board Module ---
+    // --- 11. Notice Board Module ---
     Route::prefix('notices')->group(function () {
         Route::get('/', [NoticeController::class, 'index']);
         Route::post('/', [NoticeController::class, 'store']);
     });
 
-    // --- 11. Expense Module ---
+    // --- 12. Expense Module ---
     Route::prefix('expenses')->group(function () {
         Route::post('/categories', [ExpenseController::class, 'storeCategory']);
         Route::post('/', [ExpenseController::class, 'storeExpense']);
     });
 
-    // --- 12. Dashboard Module ---
+    // --- 13. Dashboard Module ---
     Route::prefix('dashboard')->group(function () {
         Route::get('/stats', [DashboardController::class, 'stats']);
     });
 
-    // --- 13. General Settings ---
+    // --- 14. General Settings ---
     Route::prefix('general-settings')->group(function () {
         Route::get('/', [GeneralSettingController::class, 'index']);
         Route::post('/update', [GeneralSettingController::class, 'update']);
