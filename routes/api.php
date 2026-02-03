@@ -42,6 +42,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    // ✅ পাসওয়ার্ড চেঞ্জ রাউট
+Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // --- 1. Academic Module ---
     Route::prefix('academic')->group(function () {
@@ -91,12 +93,12 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // --- 6. Exam Module ---
-    Route::get('/exams', [ExamController::class, 'index']); 
-    Route::post('/exams', [ExamController::class, 'store']); 
-    Route::post('/marks', [ExamController::class, 'storeMarks']); 
+    Route::get('/exams', [ExamController::class, 'index']);
+    Route::post('/exams', [ExamController::class, 'store']);
+    Route::post('/marks', [ExamController::class, 'storeMarks']);
     // পুরানো ভুল রাউট থাকলে বাদ দিতে পারেন, নিচে নতুন করে Result Module এ দেওয়া হয়েছে
-    Route::get('/exams/{id}', [ExamController::class, 'show']); 
-    Route::put('/exams/{id}', [ExamController::class, 'update']); 
+    Route::get('/exams/{id}', [ExamController::class, 'show']);
+    Route::put('/exams/{id}', [ExamController::class, 'update']);
 
     // --- ✅ 7. Result Module (New Fixed Route) ---
     // এই রাউটটি এখন ফ্রন্টএন্ডের লিংকের সাথে মিলবে (/api/results/...)
