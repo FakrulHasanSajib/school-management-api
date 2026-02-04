@@ -76,9 +76,16 @@ class AuthController extends Controller
      */
     public function profile(Request $request)
     {
+        $user = $request->user();
+
+        // যদি ইউজার 'student' হয়, তাহলে তার প্রোফাইল, ক্লাস এবং সেকশন লোড করো
+        if ($user->role === 'student') {
+            $user->load(['studentProfile.schoolClass', 'studentProfile.section']);
+        }
+
         return response()->json([
             'status' => true,
-            'data' => $request->user()
+            'data' => $user
         ]);
     }
 

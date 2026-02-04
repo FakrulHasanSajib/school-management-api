@@ -41,7 +41,7 @@ class RoutineController extends Controller
             }
 
             $routines = $query->latest()->get();
-            
+
             return $this->success($routines, 'Routine list fetched successfully');
         } catch (\Exception $e) {
             return $this->error('Server Error: ' . $e->getMessage(), 500);
@@ -55,7 +55,7 @@ class RoutineController extends Controller
         try {
             // RoutineService এর মাধ্যমে কনফ্লিক্ট চেক করে ডাটা সেভ করা হচ্ছে
             $routine = $this->routineService->createRoutine($request->validated());
-            
+
             return $this->success($routine, 'Routine created successfully', 201);
         } catch (\Exception $e) {
             // যদি কনফ্লিক্ট হয় (যেমন: টিচার ওই সময়ে ব্যস্ত), তবে 422 এরর রিটার্ন করব
@@ -92,19 +92,20 @@ class RoutineController extends Controller
     /**
      * ✅ ৩. নির্দিষ্ট সেকশনের রুটিন দেখার API (Optional Feature)
      */
-    public function getBySection($sectionId): JsonResponse
+   public function getBySection($sectionId)
     {
-        try {
-            $routines = Routine::with(['schoolClass', 'section', 'subject', 'teacher'])
-                        ->where('section_id', $sectionId)
-                        ->orderBy('day') // দিন অনুযায়ী সাজানো
-                        ->orderBy('start_time') // সময় অনুযায়ী সাজানো
-                        ->get();
+        // ✅ ফিক্স: subject এবং teacher রিলেশন লোড করা হচ্ছে
+        $routines = \App\Models\Routine::with(['subject', 'teacher'])
+            ->where('section_id', $sectionId)
+            ->orderByRaw("FIELD(day, 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')")
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy('day'); // ✅ এখানেই ডাটা 'Day' অনুযায়ী ভাগ করে দেওয়া হলো
 
-            return $this->success($routines, 'Section routine fetched successfully');
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage(), 500);
-        }
+        return response()->json([
+            'status' => true,
+            'data' => $routines
+        ]);
     }
     public function destroy($id) {
     Routine::destroy($id);

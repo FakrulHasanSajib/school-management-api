@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\GeneralSettingController;
 use App\Http\Controllers\Api\ResultController;
+use App\Http\Controllers\Api\SslCommerzController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,7 @@ use App\Http\Controllers\Api\ResultController;
 */
 Route::post('/login', [AuthController::class, 'login']);
 
-// হেল্পার রাউট
+// হেল্পার রাউট (লগইন ছাড়াই এক্সেসযোগ্য, প্রয়োজনে অথ গ্রুপের ভেতরে নিতে পারেন)
 Route::get('academic/classes/{classId}/sections', [AcademicController::class, 'getSectionsByClass']);
 Route::get('/students/next-numbers', [StudentController::class, 'getNextNumbers']);
 
@@ -42,8 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
-    // ✅ পাসওয়ার্ড চেঞ্জ রাউট
-Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // --- 1. Academic Module ---
     Route::prefix('academic')->group(function () {
@@ -89,34 +89,34 @@ Route::post('/change-password', [AuthController::class, 'changePassword']);
         Route::get('/{id}', [StudentController::class, 'show']);
         Route::put('/{id}', [StudentController::class, 'update']);
         Route::delete('/{id}', [StudentController::class, 'destroy']);
-        // ⚠️ এখান থেকে ভুল রাউটটি সরিয়ে নিচে নেওয়া হয়েছে
     });
 
     // --- 6. Exam Module ---
     Route::get('/exams', [ExamController::class, 'index']);
     Route::post('/exams', [ExamController::class, 'store']);
     Route::post('/marks', [ExamController::class, 'storeMarks']);
-    // পুরানো ভুল রাউট থাকলে বাদ দিতে পারেন, নিচে নতুন করে Result Module এ দেওয়া হয়েছে
     Route::get('/exams/{id}', [ExamController::class, 'show']);
     Route::put('/exams/{id}', [ExamController::class, 'update']);
 
-    // --- ✅ 7. Result Module (New Fixed Route) ---
-    // এই রাউটটি এখন ফ্রন্টএন্ডের লিংকের সাথে মিলবে (/api/results/...)
+    // --- 7. Result Module ---
     Route::get('/results/exam/{exam_id}/student/{student_id}', [ResultController::class, 'getStudentResult']);
     Route::get('/results/tabulation/exam/{exam_id}/section/{section_id}', [ResultController::class, 'getTabulationSheet']);
 
 
-    // --- 8. Accounts Module ---
+    // --- 8. Accounts Module (FIXED) ---
     Route::prefix('accounts')->group(function () {
+        // Fee Types
+        Route::get('/fee-types', [AccountController::class, 'getFeeTypes']);
+        Route::post('/fee-types', [AccountController::class, 'storeFeeType']);
+
+        // ✅ ফিক্স: এখানে '/accounts' বাদ দেওয়া হয়েছে কারণ উপরে prefix('accounts') আছে
+        Route::put('/fee-types/{id}', [AccountController::class, 'updateFeeType']);
+        Route::delete('/fee-types/{id}', [AccountController::class, 'deleteFeeType']);
+
+        // Invoices & Payments
         Route::post('/invoices', [AccountController::class, 'generateInvoice']);
-        Route::post('/payments', [AccountController::class, 'payInvoice']);
         Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']);
-        Route::get('/fee-types', [AccountController::class, 'getFeeTypes']); // লিস্ট
-        Route::post('/fee-types', [AccountController::class, 'storeFeeType']); // তৈরি
-        // ইনভয়েস ও পেমেন্ট
-        Route::post('/invoices', [AccountController::class, 'generateInvoice']); // ইনভয়েস তৈরি
-        Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']); // ছাত্রের বকেয়া দেখা
-        Route::post('/payments', [AccountController::class, 'payInvoice']); // টাকা জমা দেওয়া
+        Route::post('/payments', [AccountController::class, 'payInvoice']);
         Route::get('/history', [AccountController::class, 'getAllInvoices']);
     });
 
@@ -160,3 +160,11 @@ Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 
 });
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/payment/init', [SslCommerzController::class, 'index']);
+});
+
+// ২. কলব্যাক রাউটস (এগুলো Auth এর বাইরে থাকবে)
+Route::post('/payment/success', [SslCommerzController::class, 'success']);
+Route::post('/payment/fail', [SslCommerzController::class, 'fail']);
+Route::post('/payment/cancel', [SslCommerzController::class, 'cancel']);

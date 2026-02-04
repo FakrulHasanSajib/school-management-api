@@ -11,10 +11,23 @@ use Illuminate\Http\JsonResponse;
 
 class ResultController extends Controller
 {
-    // ১. স্টুডেন্টের রেজাল্ট জেনারেট করা (সিঙ্গেল)
+    /**
+     * ১. নির্দিষ্ট স্টুডেন্টের রেজাল্ট জেনারেট করা (Single Result)
+     */
     public function getStudentResult($exam_id, $student_id): JsonResponse
     {
-        // মার্কস খুঁজে বের করা
+        // ১. স্টুডেন্ট এবং এক্সাম খুঁজে বের করা (User Relation সহ)
+        $student = StudentProfile::with(['user', 'schoolClass', 'section'])->find($student_id);
+        $exam = Exam::find($exam_id);
+
+        if (!$student || !$exam) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Student or Exam not found'
+            ], 404);
+        }
+
+        // ২. মার্কস খুঁজে বের করা (Subject সহ)
         $marks = ExamMark::with('subject')
             ->where('exam_id', $exam_id)
             ->where('student_id', $student_id)
@@ -22,23 +35,19 @@ class ResultController extends Controller
 
         if ($marks->isEmpty()) {
             return response()->json([
-                'status' => false, 
-                'message' => 'এই ছাত্রের রেজাল্ট তৈরি হয়নি (মার্কস এন্ট্রি করা হয়নি)।'
+                'status' => false,
+                'message' => 'Result not found for this exam.'
             ], 200);
         }
 
-        // ছাত্র এবং পরীক্ষার তথ্য আনা
-        // ✅ ফিক্স: ইউজারের নাম আনার জন্য 'user' রিলেশন লোড করা হচ্ছে
-        $student = StudentProfile::with('user')->find($student_id);
-        $exam = Exam::find($exam_id);
-
-        // ক্যালকুলেশন শুরু
+        // ৩. ক্যালকুলেশন ভেরিয়েবল
         $totalMarks = 0;
         $totalGpa = 0;
         $totalSubjects = $marks->count();
         $isFail = false;
         $results = [];
 
+        // ৪. লুপ চালিয়ে ক্যালকুলেশন
         foreach ($marks as $mark) {
             $obtained = $mark->marks_obtained;
             $gradeInfo = $this->calculateGrade($obtained);
@@ -51,46 +60,51 @@ class ResultController extends Controller
             $totalGpa += $gradeInfo['gpa'];
 
             $results[] = [
-                'subject' => $mark->subject->name ?? 'Unknown',
-                'marks' => $obtained,
+                'id' => $mark->id,
+                'subject' => [
+                    'name' => $mark->subject->name ?? 'Unknown Subject'
+                ],
+                'marks_obtained' => $obtained,
                 'grade' => $gradeInfo['grade'],
                 'gpa' => $gradeInfo['gpa'],
             ];
         }
 
+        // ৫. ফাইনাল জিপিএ এবং গ্রেড বের করা
         $finalGpa = ($totalSubjects > 0 && !$isFail) ? ($totalGpa / $totalSubjects) : 0.00;
         $finalGrade = $this->getFinalGrade($finalGpa, $isFail);
 
+        // ৬. রেসপন্স পাঠানো
         return response()->json([
             'status' => true,
             'data' => [
-                'student_name' => $student->user->name ?? 'Unknown', // ✅ নাম ফিক্স
-                'student_roll' => $student->roll_no ?? 'N/A',
-                'exam_name' => $exam->name ?? 'Unknown',
-                'details' => $results,
-                'summary' => [
-                    'total_marks' => $totalMarks,
-                    'final_gpa' => number_format($finalGpa, 2),
-                    'final_grade' => $finalGrade,
-                    'result_status' => $isFail ? 'FAIL' : 'PASS'
-                ]
+                'student' => $student, // এখানে user, class, section সব থাকবে
+                'exam' => $exam,
+                'marks' => $results,
+                'total_marks' => $totalMarks,
+                'final_gpa' => number_format($finalGpa, 2),
+                'final_grade' => $finalGrade,
+                'result_status' => $isFail ? 'FAIL' : 'PASS'
             ]
         ]);
     }
 
-    // ২. পুরো সেকশনের ট্যাবুলেশন শিট (Tabulation Sheet)
+    /**
+     * ২. পুরো সেকশনের ট্যাবুলেশন শিট (Tabulation Sheet)
+     */
     public function getTabulationSheet($exam_id, $section_id): JsonResponse
     {
-        // ✅ ফিক্স: 'user' রিলেশনসহ স্টুডেন্ট আনা হচ্ছে যাতে নাম পাওয়া যায়
+        // ১. সেকশনের সব স্টুডেন্ট লোড করা
         $students = StudentProfile::with('user')
             ->where('section_id', $section_id)
             ->orderBy('roll_no', 'asc')
             ->get();
 
         if ($students->isEmpty()) {
-            return response()->json(['status' => false, 'message' => 'এই সেকশনে কোনো ছাত্র পাওয়া যায়নি।'], 200);
+            return response()->json(['status' => false, 'message' => 'No students found in this section.'], 200);
         }
 
+        // ২. সব মার্কস একবারে আনা (Optimization)
         $allMarks = ExamMark::with('subject')
             ->where('exam_id', $exam_id)
             ->whereIn('student_id', $students->pluck('id'))
@@ -99,48 +113,40 @@ class ResultController extends Controller
 
         $tabulation = [];
 
+        // ৩. প্রতি স্টুডেন্টের জন্য লুপ
         foreach ($students as $student) {
-            // ✅ নামের ফিক্স: User টেবিল থেকে নাম নেওয়া হচ্ছে
-            $studentName = $student->user->name ?? 'Unknown';
+            $studentMarks = $allMarks[$student->id] ?? collect([]);
 
-            $marks = $allMarks[$student->id] ?? collect([]);
-            
             $totalMarks = 0;
             $totalGpa = 0;
-            $totalSubjects = $marks->count();
-            
-            // ✅ লজিক ফিক্স: মার্কস না থাকলে শুরুতেই ফেইল ধরা হবে
+            $totalSubjects = $studentMarks->count();
             $isFail = ($totalSubjects === 0) ? true : false;
-            
             $subjectBreakdown = [];
 
-            foreach ($marks as $mark) {
+            foreach ($studentMarks as $mark) {
                 $obtained = $mark->marks_obtained;
                 $gradeInfo = $this->calculateGrade($obtained);
 
-                // যদি কোনো বিষয়ে F পায়, তবে ফেইল
                 if ($gradeInfo['grade'] === 'F') $isFail = true;
 
                 $totalMarks += $obtained;
                 $totalGpa += $gradeInfo['gpa'];
 
                 $subjectBreakdown[] = [
-                    'subject' => $mark->subject->name,
+                    'subject' => $mark->subject->name ?? 'Unknown',
                     'marks' => $obtained,
                     'grade' => $gradeInfo['grade']
                 ];
             }
 
-            // ফাইনাল ক্যালকুলেশন
+            // ফাইনাল রেজাল্ট
             $finalGpa = ($totalSubjects > 0 && !$isFail) ? ($totalGpa / $totalSubjects) : 0.00;
-            $finalGrade = $this->getFinalGrade($finalGpa, $isFail); // F থাকলে এখানে F রিটার্ন করবে
-
-            // ✅ স্ট্যাটাস ফিক্স: নিশ্চিত করা হচ্ছে F গ্রেড মানেই FAIL
+            $finalGrade = $this->getFinalGrade($finalGpa, $isFail);
             $status = ($isFail || $finalGrade === 'F') ? 'FAIL' : 'PASS';
 
             $tabulation[] = [
                 'student_id' => $student->id,
-                'name' => $studentName,
+                'name' => $student->user->name ?? 'Unknown',
                 'roll' => $student->roll_no,
                 'subjects' => $subjectBreakdown,
                 'total_marks' => $totalMarks,
@@ -153,7 +159,9 @@ class ResultController extends Controller
         return response()->json(['status' => true, 'data' => $tabulation]);
     }
 
-    // হেল্পার ফাংশন: মার্কস থেকে গ্রেড বের করা
+    /**
+     * মার্কস থেকে গ্রেড এবং জিপিএ বের করার হেল্পার ফাংশন
+     */
     private function calculateGrade($marks)
     {
         if ($marks >= 80) return ['grade' => 'A+', 'gpa' => 5.00];
@@ -165,7 +173,9 @@ class ResultController extends Controller
         return ['grade' => 'F', 'gpa' => 0.00];
     }
 
-    // হেল্পার ফাংশন: জিপিএ থেকে ফাইনাল গ্রেড
+    /**
+     * জিপিএ থেকে ফাইনাল গ্রেড বের করার হেল্পার ফাংশন
+     */
     private function getFinalGrade($gpa, $isFail)
     {
         if ($isFail) return 'F';

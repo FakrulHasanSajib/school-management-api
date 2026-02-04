@@ -24,13 +24,15 @@ class AccountController extends Controller
         $request->validate([
             'name' => 'required|string',
             'amount' => 'required|numeric',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'due_date' => 'nullable|date',
         ]);
 
         $type = FeeType::create([
             'name' => $request->name,
             'amount' => $request->amount,
-            'description' => $request->description
+            'description' => $request->description,
+            'due_date' => $request->due_date,
         ]);
 
         return response()->json(['status' => true, 'message' => 'Fee Type Created', 'data' => $type], 201);
@@ -67,7 +69,7 @@ class AccountController extends Controller
             'due_amount' => $feeType->amount,
             'paid_amount' => 0,
             'due_date' => $request->due_date,
-            'status' => 'Pending' 
+            'status' => 'Pending'
         ]);
 
         return response()->json([
@@ -78,15 +80,17 @@ class AccountController extends Controller
     }
 
     // ৪. ছাত্রের সব ইনভয়েস দেখা (পেমেন্ট নেওয়ার জন্য)
-    public function getStudentInvoices($student_id): JsonResponse
+public function getStudentInvoices($studentId)
     {
-        // 'feeType' রিলেশন লোড করা হচ্ছে যাতে ফ্রন্টএন্ডে নাম (Monthly Fee) দেখানো যায়
-        $invoices = FeeInvoice::with('feeType')
-            ->where('student_id', $student_id)
-            ->orderBy('id', 'desc')
+        $invoices = FeeInvoice::with('feeType') // ফি-এর নাম (Tuition, Exam etc)
+            ->where('student_id', $studentId)
+            ->orderBy('due_date', 'desc') // তারিখ অনুযায়ী সাজানো
             ->get();
 
-        return response()->json(['status' => true, 'data' => $invoices]);
+        return response()->json([
+            'status' => true,
+            'data' => $invoices
+        ]);
     }
 
     // ৫. ফি পেমেন্ট রিসিভ করা (FIXED)
@@ -112,7 +116,7 @@ class AccountController extends Controller
 
         // ১. পেমেন্ট রেকর্ড তৈরি
         $payment = Payment::create([
-            'invoice_id'     => $request->fee_invoice_id, 
+            'invoice_id'     => $request->fee_invoice_id,
             'amount'         => $request->amount,
             'method'         => $request->payment_method,
             'transaction_id' => $request->transaction_id ?? 'TRX-' . time() . rand(100,999), // ইউনিক ট্রানজেকশন আইডি
@@ -122,7 +126,7 @@ class AccountController extends Controller
         // ২. ইনভয়েস আপডেট (ব্যালেন্স কমানো)
         $invoice->paid_amount += $request->amount;
         $invoice->due_amount = $invoice->total_amount - $invoice->paid_amount;
-        
+
         // স্ট্যাটাস আপডেট (ডাটাবেস ENUM অনুযায়ী)
         if ($invoice->due_amount <= 0) {
             $invoice->status = 'Paid';
@@ -130,12 +134,12 @@ class AccountController extends Controller
         } else {
             $invoice->status = 'Partial';
         }
-        
+
         $invoice->save();
 
         return response()->json([
-            'status' => true, 
-            'message' => 'Payment received successfully', 
+            'status' => true,
+            'message' => 'Payment received successfully',
             'data' => $invoice
         ], 201);
     }
@@ -147,5 +151,34 @@ class AccountController extends Controller
             ->get();
 
         return response()->json(['status' => true, 'data' => $invoices]);
+    }
+    public function updateFeeType(Request $request, $id)
+    {
+        $feeType = FeeType::find($id);
+
+        $feeType->update([
+            'name' => $request->name,
+            'amount' => $request->amount,
+            'due_date' => $request->due_date // আপডেটের সময়ও এটা লাগবে
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'Updated Successfully']);
+    }
+
+    public function deleteFeeType($id)
+    {
+        $feeType = FeeType::find($id);
+
+        if (!$feeType) {
+            return response()->json(['status' => false, 'message' => 'Fee Type Not Found'], 404);
+        }
+
+        // চেক: এই ফির আন্ডারে কোনো ইনভয়েস আছে কিনা? থাকলে ডিলিট করা যাবে না
+        if ($feeType->invoices()->exists()) {
+            return response()->json(['status' => false, 'message' => 'Cannot delete. Invoices exist for this fee.'], 400);
+        }
+
+        $feeType->delete();
+        return response()->json(['status' => true, 'message' => 'Deleted Successfully']);
     }
 }
