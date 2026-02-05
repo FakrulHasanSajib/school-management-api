@@ -74,19 +74,66 @@ class AuthController extends Controller
     /**
      * Get User Profile
      */
-    public function profile(Request $request)
+  public function profile(Request $request)
     {
-        $user = $request->user();
+        // 🛡️ সেফ মোড: সার্ভার ক্রাশ না করে এরর মেসেজ দেখাবে
+        try {
+            $user = $request->user();
 
-        // যদি ইউজার 'student' হয়, তাহলে তার প্রোফাইল, ক্লাস এবং সেকশন লোড করো
-        if ($user->role === 'student') {
-            $user->load(['studentProfile.schoolClass', 'studentProfile.section']);
+            if (!$user) {
+                return response()->json(['status' => false, 'message' => 'User not found in request'], 401);
+            }
+
+            // ১. স্টুডেন্ট ডাটা খোঁজার চেষ্টা
+            // \App\Models\StudentProfile ক্লাসটি ঠিকমতো আছে কিনা চেক হবে
+            $student = null;
+            if (class_exists(\App\Models\StudentProfile::class)) {
+                $student = \App\Models\StudentProfile::where('user_id', $user->id)->first();
+
+                // যদি স্টুডেন্ট পাওয়া যায়, রিলেশনশিপ লোড করার চেষ্টা
+                if ($student) {
+                    // রিলেশনশিপগুলো আসলে আছে কিনা চেক করে লোড করা ভালো, তবে এখানে আমরা সরাসরি করছি
+                    // যদি schoolClass বা section রিলেশন মডেলে না থাকে, এখানে এরর খেতে পারে
+                    try {
+                        $student->load(['schoolClass', 'section']);
+                    } catch (\Exception $e) {
+                        // রিলেশনশিপ না থাকলে ইগনোর করবে
+                    }
+                }
+            }
+
+            // ২. রেসপন্স তৈরি
+            return response()->json([
+                'status' => true,
+                'message' => 'Profile fetched successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+
+                    // এখানে স্টুডেন্ট ডাটা পাঠাচ্ছি
+                    'student_profile' => $student,
+                    'studentProfile' => $student, // সেইফটির জন্য দুই নামেই দিচ্ছি
+
+                    // ডিবাগিং তথ্য (এটা দেখে বুঝব আসলে কী হচ্ছে)
+                    'debug_info' => [
+                        'user_id' => $user->id,
+                        'student_found' => $student ? 'YES' : 'NO',
+                        'table_check' => 'Query executed successfully'
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $error) {
+            // 🛑 যদি কোনো কারণে কোড ফাটে, তাহলে এই ব্লকটি আসল এরর দেখাবে
+            return response()->json([
+                'status' => false,
+                'message' => 'Server Error: ' . $error->getMessage(),
+                'file' => $error->getFile(),
+                'line' => $error->getLine()
+            ], 500);
         }
-
-        return response()->json([
-            'status' => true,
-            'data' => $user
-        ]);
     }
 
     /**

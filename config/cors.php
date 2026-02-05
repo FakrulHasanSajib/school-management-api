@@ -1,33 +1,13 @@
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your settings for cross-origin resource sharing
-    | or "CORS". This determines what cross-origin operations may execute
-    | in web browsers. You are free to adjust these settings as needed.
-    |
-    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
-    |
-    */
-
     'paths' => ['api/*', 'sanctum/csrf-cookie', 'payment/*', 'login', 'logout'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://127.0.0.1:5173',
-        'http://127.0.0.1:5174',
-        'http://localhost:5174', // ✅ এটি থাকতেই হবে
-        'http://127.0.0.1:5174', // সেফটির জন্য এটিও রাখুন
-        'http://localhost:5173',
-
+        'http://localhost:5173', // ✅ আপনার বর্তমান ফ্রন্টএন্ড
+        'http://127.0.0.1:5173', // সেইফটির জন্য
     ],
 
     'allowed_origins_patterns' => [],
@@ -38,6 +18,5 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
-
+    'supports_credentials' => true, // Sanctum টোকেন ব্যবহারের জন্য এটি true থাকতেই হবে
 ];
