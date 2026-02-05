@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\FeeInvoice;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
-// ✅ আমাদের ম্যানুয়াল লাইব্রেরি ইম্পোর্ট
 use App\Library\SslCommerz\SslCommerzNotification;
 
 class SslCommerzController extends Controller
@@ -27,10 +26,10 @@ class SslCommerzController extends Controller
             'currency' => "BDT",
             'tran_id' => uniqid(),
 
-            // ✅ এই URL গুলো লারাভেলের APP_URL (.env) থেকে অটোমেটিক নিবে
-            'success_url' => url('/api/payment/success'),
-            'fail_url' => url('/api/payment/fail'),
-            'cancel_url' => url('/api/payment/cancel'),
+            // ✅ URL পরিবর্তন করা হয়েছে (যাতে কনফ্লিক্ট না হয়)
+            'success_url' => url('/api/payment/callback/success'),
+            'fail_url' => url('/api/payment/callback/fail'),
+            'cancel_url' => url('/api/payment/callback/cancel'),
 
             // কাস্টমার ইনফো
             'cus_name' => $invoice->student->user->name ?? 'Student',
@@ -60,15 +59,13 @@ class SslCommerzController extends Controller
         }
     }
 
-    // ২. পেমেন্ট সফল হলে
-    public function success(Request $request)
+    // ✅ নাম পরিবর্তন: success -> paymentSuccess
+    public function paymentSuccess(Request $request)
     {
         $tran_id = $request->input('tran_id');
         $amount = $request->input('amount');
         $invoice_id = $request->input('value_a');
 
-        // ✅ ফ্রন্টএন্ড URL .env ফাইল থেকে নেওয়া হচ্ছে (হোস্টিংয়ের জন্য জরুরি)
-        // যদি .env তে না পায়, ডিফল্ট হিসেবে localhost:5174 নিবে
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5174');
 
         $sslc = new SslCommerzNotification();
@@ -80,7 +77,6 @@ class SslCommerzController extends Controller
                 $invoice = FeeInvoice::find($invoice_id);
 
                 if($invoice) {
-                    // পেমেন্ট রেকর্ড
                     Payment::create([
                         'invoice_id' => $invoice_id,
                         'amount' => $amount,
@@ -89,7 +85,6 @@ class SslCommerzController extends Controller
                         'paid_at' => now()->toDateString(),
                     ]);
 
-                    // ইনভয়েস আপডেট
                     $invoice->paid_amount += $amount;
                     $invoice->due_amount = $invoice->total_amount - $invoice->paid_amount;
 
@@ -103,8 +98,6 @@ class SslCommerzController extends Controller
                 }
 
                 DB::commit();
-
-                // ✅ ডাইনামিক রিডাইরেক্ট
                 return redirect($frontendUrl . '/student/fees?status=success');
 
             } catch (\Exception $e) {
@@ -116,15 +109,15 @@ class SslCommerzController extends Controller
         }
     }
 
-    // ৩. পেমেন্ট ফেইল হলে
-    public function fail(Request $request)
+    // ✅ নাম পরিবর্তন: fail -> paymentFail
+    public function paymentFail(Request $request)
     {
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5174');
         return redirect($frontendUrl . '/student/fees?status=failed');
     }
 
-    // ৪. পেমেন্ট ক্যান্সেল করলে
-    public function cancel(Request $request)
+    // ✅ নাম পরিবর্তন: cancel -> paymentCancel
+    public function paymentCancel(Request $request)
     {
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:5174');
         return redirect($frontendUrl . '/student/fees?status=cancel');

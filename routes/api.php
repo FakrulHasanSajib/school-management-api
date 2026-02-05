@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Dashboard\DashboardController;
 use App\Http\Controllers\Api\GeneralSettingController;
 use App\Http\Controllers\Api\ResultController;
 use App\Http\Controllers\Api\SslCommerzController;
+use App\Http\Controllers\Api\AdmitCardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,7 +27,7 @@ use App\Http\Controllers\Api\SslCommerzController;
 */
 Route::post('/login', [AuthController::class, 'login']);
 
-// হেল্পার রাউট (লগইন ছাড়াই এক্সেসযোগ্য, প্রয়োজনে অথ গ্রুপের ভেতরে নিতে পারেন)
+// হেল্পার রাউট
 Route::get('academic/classes/{classId}/sections', [AcademicController::class, 'getSectionsByClass']);
 Route::get('/students/next-numbers', [StudentController::class, 'getNextNumbers']);
 
@@ -103,18 +104,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/results/tabulation/exam/{exam_id}/section/{section_id}', [ResultController::class, 'getTabulationSheet']);
 
 
-    // --- 8. Accounts Module (FIXED) ---
+    // --- 8. Accounts Module ---
     Route::prefix('accounts')->group(function () {
         // Fee Types
         Route::get('/fee-types', [AccountController::class, 'getFeeTypes']);
         Route::post('/fee-types', [AccountController::class, 'storeFeeType']);
-
-        // ✅ ফিক্স: এখানে '/accounts' বাদ দেওয়া হয়েছে কারণ উপরে prefix('accounts') আছে
         Route::put('/fee-types/{id}', [AccountController::class, 'updateFeeType']);
         Route::delete('/fee-types/{id}', [AccountController::class, 'deleteFeeType']);
 
         // Invoices & Payments
         Route::post('/invoices', [AccountController::class, 'generateInvoice']);
+        Route::get('/invoices', [AccountController::class, 'getAllInvoices']);
+
         Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']);
         Route::post('/payments', [AccountController::class, 'payInvoice']);
         Route::get('/history', [AccountController::class, 'getAllInvoices']);
@@ -127,6 +128,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/payroll', [HRController::class, 'storePayroll']);
         Route::post('/leave', [HRController::class, 'storeLeave']);
         Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
+        Route::get('/payroll/history', [HRController::class, 'getPayrollHistory']);
+        Route::get('/leaves', [HRController::class, 'getLeaves']); // সব ছুটির আবেদন দেখা
+    Route::post('/leave', [HRController::class, 'storeLeave']); // ছুটির আবেদন করা
+    Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
     });
 
     // --- 10. Library Module ---
@@ -134,6 +139,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/books', [LibraryController::class, 'storeBook']);
         Route::post('/issue', [LibraryController::class, 'issue']);
         Route::post('/return/{id}', [LibraryController::class, 'returnBook']);
+        Route::get('/books', [LibraryController::class, 'index']);
+        Route::get('/issued-books', [LibraryController::class, 'issuedBooks']);
     });
 
     // --- 11. Notice Board Module ---
@@ -142,10 +149,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [NoticeController::class, 'store']);
     });
 
-    // --- 12. Expense Module ---
+    // --- 12. Expense Module (✅ UPDATED) ---
     Route::prefix('expenses')->group(function () {
-        Route::post('/categories', [ExpenseController::class, 'storeCategory']);
-        Route::post('/', [ExpenseController::class, 'storeExpense']);
+        Route::get('/', [ExpenseController::class, 'index']); // খরচের লিস্ট
+        Route::post('/', [ExpenseController::class, 'storeExpense']); // খরচ যোগ
+        Route::delete('/{id}', [ExpenseController::class, 'destroy']); // খরচ ডিলিট
+
+        Route::get('/categories', [ExpenseController::class, 'getCategories']); // ক্যাটাগরি লোড
+        Route::post('/categories', [ExpenseController::class, 'storeCategory']); // ক্যাটাগরি তৈরি
     });
 
     // --- 13. Dashboard Module ---
@@ -159,12 +170,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/update', [GeneralSettingController::class, 'update']);
     });
 
-});
-Route::middleware('auth:sanctum')->group(function () {
+    // --- 15. Admit card ---
+    Route::get('/admit-card', [AdmitCardController::class, 'index']);
+
+    // SSL Init (Inside Auth)
     Route::post('/payment/init', [SslCommerzController::class, 'index']);
+
 });
 
 // ২. কলব্যাক রাউটস (এগুলো Auth এর বাইরে থাকবে)
-Route::post('/payment/success', [SslCommerzController::class, 'success']);
-Route::post('/payment/fail', [SslCommerzController::class, 'fail']);
-Route::post('/payment/cancel', [SslCommerzController::class, 'cancel']);
+Route::post('/payment/callback/success', [SslCommerzController::class, 'paymentSuccess']);
+Route::post('/payment/callback/fail', [SslCommerzController::class, 'paymentFail']);
+Route::post('/payment/callback/cancel', [SslCommerzController::class, 'paymentCancel']);

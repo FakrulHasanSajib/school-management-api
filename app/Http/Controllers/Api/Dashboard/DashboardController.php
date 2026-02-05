@@ -5,27 +5,41 @@ namespace App\Http\Controllers\Api\Dashboard;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use App\Models\StudentProfile;
-use App\Models\TeacherProfile;
+use App\Models\TeacherProfile; // অথবা User যেখানে role='teacher'
 use App\Models\Payment;
 use App\Models\Attendance;
+use App\Models\Expense; // ✅ নতুন যোগ করা হয়েছে
+use App\Models\Payroll; // ✅ নতুন যোগ করা হয়েছে
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function stats(): JsonResponse
     {
         try {
-            // ১. কার্ডের ডাটা
+            // ১. ইনকাম ক্যালকুলেশন
+            $total_income = Payment::sum('amount');
+
+            // ২. এক্সপেন্স ক্যালকুলেশন (খরচ + স্যালারি)
+            $total_general_expense = Expense::sum('amount');
+            $total_salary_expense = Payroll::sum('net_salary');
+            $total_expense = $total_general_expense + $total_salary_expense;
+
+            // ৩. নেট ব্যালেন্স (লাভ/উদ্বৃত্ত)
+            $net_balance = $total_income - $total_expense;
+
+            // ৪. কার্ডের ডাটা
             $stats = [
                 'total_students' => StudentProfile::count(),
                 'total_teachers' => TeacherProfile::count(),
-                'total_income'   => Payment::sum('amount'),
+                'total_income'   => $total_income,
+                'total_expense'  => $total_expense, // ✅ ড্যাশবোর্ডে পাঠানোর জন্য
+                'net_balance'    => $net_balance,   // ✅ ড্যাশবোর্ডে পাঠানোর জন্য
                 'todays_present' => Attendance::whereDate('date', now()->toDateString())
                                     ->where('status', 'Present')->count()
             ];
 
-            // ২. রিসেন্ট পেমেন্ট (লেটেস্ট ৫টি) - স্টুডেন্ট নাম সহ
+            // ৫. রিসেন্ট পেমেন্ট (Student নামসহ)
             $recent_payments = Payment::with(['invoice.student.user', 'invoice.feeType'])
                                 ->orderBy('id', 'desc')
                                 ->take(5)
@@ -33,7 +47,8 @@ class DashboardController extends Controller
                                 ->map(function($payment) {
                                     return [
                                         'id' => $payment->id,
-                                        'student_name' => $payment->invoice->student->user->name ?? 'Unknown',
+                                        // যদি ইউজার ডিলিট হয়ে যায়, তবুও যেন এরর না দেয়
+                                        'student_name' => $payment->invoice->student->user->name ?? 'Unknown Student',
                                         'fee_type' => $payment->invoice->feeType->name ?? 'Fee',
                                         'amount' => $payment->amount,
                                         'date' => $payment->created_at->format('d M, Y'),
@@ -41,33 +56,41 @@ class DashboardController extends Controller
                                     ];
                                 });
 
-            // ৩. চার্ট ডাটা: মাসিক ইনকাম (চলতি বছরের) - Dynamic Income Chart
+            // ৬. চার্ট ডাটা: মাসিক ইনকাম
             $incomeData = Payment::select(
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('SUM(amount) as total')
             )
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
-            ->orderBy('month')
             ->pluck('total', 'month')
             ->toArray();
 
-            // সব মাসের ডাটা রেডি করা (যাতে খালি মাসে ০ দেখায়)
+            // ৭. চার্ট ডাটা: মাসিক খরচ (অপশনাল, চাইলে চার্টে দেখাতে পারো)
+            $expenseData = Expense::select(
+                DB::raw('MONTH(expense_date) as month'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->whereYear('expense_date', date('Y'))
+            ->groupBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
             $monthly_income = [];
-            $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $monthly_expense = [];
 
             foreach (range(1, 12) as $m) {
                 $monthly_income[] = $incomeData[$m] ?? 0;
+                $monthly_expense[] = $expenseData[$m] ?? 0;
             }
 
-            // ৪. চার্ট ডাটা: আজকের উপস্থিতির অনুপাত - Dynamic Attendance Chart
+            // ৮. এটেন্ডেন্স চার্ট
             $attendanceCounts = Attendance::whereDate('date', now()->toDateString())
                 ->select('status', DB::raw('count(*) as total'))
                 ->groupBy('status')
                 ->pluck('total', 'status')
                 ->toArray();
 
-            // যদি আজ হাজিরা না নেওয়া হয়, তবে সব ০ থাকবে
             $attendance_ratio = [
                 $attendanceCounts['Present'] ?? 0,
                 $attendanceCounts['Absent'] ?? 0,
@@ -80,8 +103,9 @@ class DashboardController extends Controller
                     'stats' => $stats,
                     'recent_payments' => $recent_payments,
                     'chart_data' => [
-                        'months' => $months,
+                        'months' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                         'income' => $monthly_income,
+                        'expense' => $monthly_expense, // চার্টে দেখানোর জন্য পাঠালাম
                         'attendance' => $attendance_ratio
                     ]
                 ]

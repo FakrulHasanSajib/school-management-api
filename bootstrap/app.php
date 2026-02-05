@@ -12,10 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // ✅ নতুন URL গুলো এখানে বসানো হলো
         $middleware->validateCsrfTokens(except: [
-            '/api/payment/success',
-            '/api/payment/fail',
-            '/api/payment/cancel',
+            '/api/payment/callback/success',
+            '/api/payment/callback/fail',
+            '/api/payment/callback/cancel',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

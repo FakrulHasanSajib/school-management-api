@@ -23,6 +23,19 @@ class LibraryController extends Controller
     /**
      * নতুন বই যুক্ত করা
      */
+
+
+
+    public function index()
+{
+    // সব বইয়ের লিস্ট পাঠাবে (লেটেস্ট আগে)
+    $books = \App\Models\Book::latest()->get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $books
+    ]);
+}
     public function storeBook(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -68,9 +81,66 @@ public function issue(Request $request): JsonResponse
             'message' => 'Book issued successfully',
             'data'    => $issue
         ], 201);
-        
+
     } catch (Exception $e) {
         return response()->json(['message' => $e->getMessage()], 422);
+    }
+}
+public function issuedBooks()
+{
+    // রিলেশনসহ ডাটা আনছি (বই এবং স্টুডেন্ট এর নাম দেখানোর জন্য)
+    $issues = \App\Models\BookIssue::with(['book', 'student.user'])
+                ->orderBy('id', 'desc')
+                ->get();
+
+    return response()->json([
+        'status' => true,
+        'data' => $issues
+    ]);
+}
+// ৫. বই ফেরত নেওয়া (Return Book)
+public function returnBook($id)
+{
+    try {
+        // ১. ইস্যু রেকর্ড খুঁজে বের করা
+        $issue = \App\Models\BookIssue::find($id);
+
+        if (!$issue) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Issue record not found'
+            ], 404);
+        }
+
+        // যদি অলরেডি ফেরত দেওয়া থাকে
+        if ($issue->status === 'Returned') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Book already returned'
+            ], 400);
+        }
+
+        // ২. স্ট্যাটাস আপডেট করা
+        $issue->status = 'Returned';
+        $issue->returned_at = now(); // আজকের তারিখ
+        $issue->save();
+
+        // ৩. বইয়ের স্টক ১ বাড়ানো (Increment Stock)
+        $book = \App\Models\Book::find($issue->book_id);
+        if ($book) {
+            $book->increment('quantity');
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Book returned successfully'
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ], 500);
     }
 }
 }
