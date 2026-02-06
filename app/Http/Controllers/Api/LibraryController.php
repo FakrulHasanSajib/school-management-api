@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Services\LibraryService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Traits\ApiResponse; // আপনার প্রজেক্টে ApiResponse ট্রেইট থাকলে এটি ব্যবহার করুন
+use App\Traits\ApiResponse;
+use App\Models\BookRequest;
+use App\Models\BookIssue;
+use App\Models\Book;
+use App\Models\StudentProfile; // ✅ এখানে Student এর বদলে StudentProfile হবে
 use Exception;
 
 class LibraryController extends Controller
@@ -21,21 +25,21 @@ class LibraryController extends Controller
     }
 
     /**
-     * নতুন বই যুক্ত করা
+     * ১. সব বইয়ের লিস্ট দেখা
      */
-
-
-
     public function index()
-{
-    // সব বইয়ের লিস্ট পাঠাবে (লেটেস্ট আগে)
-    $books = \App\Models\Book::latest()->get();
+    {
+        $books = Book::latest()->get();
 
-    return response()->json([
-        'status' => true,
-        'data' => $books
-    ]);
-}
+        return response()->json([
+            'status' => true,
+            'data' => $books
+        ]);
+    }
+
+    /**
+     * ২. নতুন বই যুক্ত করা
+     */
     public function storeBook(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -48,7 +52,6 @@ class LibraryController extends Controller
 
         $book = $this->libraryService->addBook($validated);
 
-        // টেস্ট পাসের জন্য সঠিক মেসেজ এবং ২০১ স্ট্যাটাস কোড নিশ্চিত করা
         return response()->json([
             'status'  => true,
             'message' => 'Book added successfully',
@@ -57,90 +60,155 @@ class LibraryController extends Controller
     }
 
     /**
-     * বই ইস্যু করা (স্টুডেন্ট বা টিচারকে)
+     * ৩. বই ইস্যু করা (Fixed: StudentProfile Model Used)
      */
-   // app/Http/Controllers/Api/LibraryController.php
+    public function issue(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'book_id'     => 'required|exists:books,id',
+            // ✅ টেবিলের নাম student_profiles হবে
+            'student_id'  => 'required|exists:student_profiles,id',
+            'return_date' => 'required|date'
+        ]);
 
-// app/Http/Controllers/Api/LibraryController.php
+        try {
+            // ১. স্টক চেক করা
+            $book = Book::find($request->book_id);
+            if ($book->quantity < 1) {
+                return response()->json(['status' => false, 'message' => 'Book is out of stock'], 400);
+            }
 
-// app/Http/Controllers/Api/LibraryController.php
+            // ২. ইস্যু রেকর্ড তৈরি
+            $issue = BookIssue::create([
+                'book_id' => $request->book_id,
+                'student_id' => $request->student_id,
+                'issue_date' => now(),
+                'return_date' => $request->return_date,
+                'status' => 'Issued'
+            ]);
 
-public function issue(Request $request): JsonResponse
-{
-    $validated = $request->validate([
-        'book_id'     => 'required|exists:books,id',
-        'student_id'  => 'required|exists:student_profiles,id', // ✅ Nullable নয়, Required
-        'return_date' => 'required|date' // ✅ return_date ব্যবহার করা হয়েছে
-    ]);
+            // ৩. বইয়ের স্টক ১ কমানো
+            $book->decrement('quantity');
 
-    try {
-        $issue = $this->libraryService->issueBook($validated);
+            // ৪. রিকোয়েস্ট স্ট্যাটাস আপডেট (PENDING -> APPROVED)
+            // ✅ এখানে Student::find() এর বদলে StudentProfile::find() হবে
+            $student = StudentProfile::find($request->student_id);
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'Book issued successfully',
-            'data'    => $issue
-        ], 201);
+            if ($student) {
+                // ওই স্টুডেন্টের এই বইয়ের জন্য কোনো পেন্ডিং রিকোয়েস্ট থাকলে তা Approved করা
+                BookRequest::where('user_id', $student->user_id)
+                    ->where('book_id', $request->book_id)
+                    ->where('status', 'Pending')
+                    ->update(['status' => 'Approved']);
+            }
 
-    } catch (Exception $e) {
-        return response()->json(['message' => $e->getMessage()], 422);
+            return response()->json([
+                'status'  => true,
+                'message' => 'Book issued successfully and request approved!',
+                'data'    => $issue
+            ], 201);
+
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
-public function issuedBooks()
-{
-    // রিলেশনসহ ডাটা আনছি (বই এবং স্টুডেন্ট এর নাম দেখানোর জন্য)
-    $issues = \App\Models\BookIssue::with(['book', 'student.user'])
-                ->orderBy('id', 'desc')
-                ->get();
 
-    return response()->json([
-        'status' => true,
-        'data' => $issues
-    ]);
-}
-// ৫. বই ফেরত নেওয়া (Return Book)
-public function returnBook($id)
-{
-    try {
-        // ১. ইস্যু রেকর্ড খুঁজে বের করা
-        $issue = \App\Models\BookIssue::find($id);
-
-        if (!$issue) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Issue record not found'
-            ], 404);
-        }
-
-        // যদি অলরেডি ফেরত দেওয়া থাকে
-        if ($issue->status === 'Returned') {
-            return response()->json([
-                'status' => false,
-                'message' => 'Book already returned'
-            ], 400);
-        }
-
-        // ২. স্ট্যাটাস আপডেট করা
-        $issue->status = 'Returned';
-        $issue->returned_at = now(); // আজকের তারিখ
-        $issue->save();
-
-        // ৩. বইয়ের স্টক ১ বাড়ানো (Increment Stock)
-        $book = \App\Models\Book::find($issue->book_id);
-        if ($book) {
-            $book->increment('quantity');
-        }
+    /**
+     * ৪. ইস্যু করা বইয়ের লিস্ট দেখা
+     */
+    public function issuedBooks()
+    {
+        $issues = BookIssue::with(['book', 'student.user'])
+                    ->orderBy('id', 'desc')
+                    ->get();
 
         return response()->json([
             'status' => true,
-            'message' => 'Book returned successfully'
+            'data' => $issues
+        ]);
+    }
+
+    /**
+     * ৫. বই ফেরত নেওয়া
+     */
+    public function returnBook($id)
+    {
+        try {
+            $issue = BookIssue::find($id);
+
+            if (!$issue) {
+                return response()->json(['status' => false, 'message' => 'Issue record not found'], 404);
+            }
+
+            if ($issue->status === 'Returned') {
+                return response()->json(['status' => false, 'message' => 'Book already returned'], 400);
+            }
+
+            $issue->status = 'Returned';
+            $issue->returned_at = now();
+            $issue->save();
+
+            $book = Book::find($issue->book_id);
+            if ($book) {
+                $book->increment('quantity');
+            }
+
+            return response()->json(['status' => true, 'message' => 'Book returned successfully']);
+
+        } catch (Exception $e) {
+            return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * ৬. স্টুডেন্ট রিকোয়েস্ট পাঠানো
+     */
+    public function requestBook(Request $request)
+    {
+        $request->validate(['book_id' => 'required|exists:books,id']);
+
+        $exists = BookRequest::where('user_id', $request->user()->id)
+                    ->where('book_id', $request->book_id)
+                    ->whereIn('status', ['Pending', 'Approved'])
+                    ->exists();
+
+        if ($exists) {
+            return response()->json(['status' => false, 'message' => 'You already requested this book.'], 400);
+        }
+
+        BookRequest::create([
+            'user_id' => $request->user()->id,
+            'book_id' => $request->book_id,
+            'request_date' => now(),
+            'status' => 'Pending'
         ]);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => false,
-            'message' => 'Error: ' . $e->getMessage()
-        ], 500);
+        return response()->json(['status' => true, 'message' => 'Book request sent successfully!']);
     }
-}
+
+    /**
+     * ৭. স্টুডেন্ট নিজের রিকোয়েস্ট দেখবে
+     */
+    public function getMyRequests(Request $request)
+    {
+        $requests = BookRequest::where('user_id', $request->user()->id)
+                    ->with('book')
+                    ->latest()
+                    ->get();
+
+        return response()->json(['status' => true, 'data' => $requests]);
+    }
+
+    /**
+     * ৮. লাইব্রেরিয়ান সব রিকোয়েস্ট দেখবে
+     */
+    public function getAllRequests()
+    {
+        $requests = BookRequest::with(['user', 'book'])
+                    ->where('status', 'Pending')
+                    ->latest()
+                    ->get();
+
+        return response()->json(['status' => true, 'data' => $requests]);
+    }
 }

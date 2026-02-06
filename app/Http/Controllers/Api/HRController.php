@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Designation;
 use App\Models\Payroll;
-use Illuminate\Support\Facades\Validator; // ✅ Validator অ্যাড করা হয়েছে
+use App\Models\Leave; // ✅ Leave মডেল ইম্পোর্ট করা হয়েছে
+use Illuminate\Support\Facades\Validator;
 
 class HRController extends Controller
 {
-    // ১. ডেজিগনেশন তৈরি (এটা ঠিক আছে)
+    // ১. ডেজিগনেশন তৈরি
     public function storeDesignation(Request $request) {
         $validated = $request->validate([
             'name' => 'required|string|unique:designations,name',
@@ -18,15 +19,14 @@ class HRController extends Controller
         ]);
 
         $designation = Designation::create($validated);
-        return response()->json(['message' => 'Designation created', 'data' => $designation], 201);
+        return response()->json(['status' => true, 'message' => 'Designation created', 'data' => $designation], 201);
     }
 
-    // ২. স্যালারি পেমেন্ট (✅ ফ্রন্টএন্ডের সাথে মিল রেখে আপডেট করা হয়েছে)
+    // ২. স্যালারি পেমেন্ট
     public function paySalary(Request $request) {
-        // ভ্যালিডেশন
         $validator = Validator::make($request->all(), [
-            'teacher_id' => 'required|exists:users,id', // ফ্রন্টএন্ড পাঠাচ্ছে teacher_id
-            'salary_month' => 'required',               // ফ্রন্টএন্ড পাঠাচ্ছে salary_month
+            'teacher_id' => 'required|exists:users,id',
+            'salary_month' => 'required',
             'amount' => 'required|numeric',
             'bonus' => 'nullable|numeric',
             'deduction' => 'nullable|numeric',
@@ -74,46 +74,84 @@ class HRController extends Controller
             ], 500);
         }
     }
+
+    // ৩. স্যালারি হিস্ট্রি দেখা
     public function getPayrollHistory()
-{
-    // লেটেস্ট পেমেন্ট আগে দেখাবে, সাথে ইউজারের নাম ও ডেজিগনেশন থাকবে
-    $history = \App\Models\Payroll::with('user.teacherProfile')->latest()->get();
+    {
+        $history = Payroll::with('user.teacherProfile')->latest()->get();
 
-    return response()->json([
-        'status' => true,
-        'data' => $history
-    ]);
-}
-// HRController.php এর ভেতরে
-
-// ১. সব ছুটির আবেদন দেখা (অ্যাডমিনের জন্য)
-public function getLeaves()
-{
-    // ইউজার রিলেশনসহ সব ছুটির লিস্ট লোড করা হচ্ছে
-    $leaves = \App\Models\Leave::with('user')->latest()->get();
-
-    return response()->json([
-        'status' => true,
-        'data' => $leaves
-    ]);
-}
-
-// ২. ছুটির স্ট্যাটাস আপডেট করা (Approve/Reject)
-public function updateLeaveStatus(\Illuminate\Http\Request $request, $id)
-{
-    $leave = \App\Models\Leave::find($id);
-
-    if (!$leave) {
-        return response()->json(['status' => false, 'message' => 'Leave record not found'], 404);
+        return response()->json([
+            'status' => true,
+            'data' => $history
+        ]);
     }
 
-    // স্ট্যাটাস আপডেট (Approved অথবা Rejected)
-    $leave->status = $request->status;
-    $leave->save();
+    // ✅ ৪. ছুটির আবেদন জমা নেওয়া (NEW FUNCTION)
+    public function storeLeave(Request $request) {
+        // ভ্যালিডেশন
+        $validator = Validator::make($request->all(), [
+            'type' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'required|string'
+        ]);
 
-    return response()->json([
-        'status' => true,
-        'message' => 'Leave status updated to ' . $request->status
-    ]);
-}
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        try {
+            $leave = Leave::create([
+                'user_id' => $request->user()->id, // লগইন করা ইউজার আইডি
+                'type' => $request->type,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'reason' => $request->reason,
+                'status' => 'Pending' // ডিফল্ট স্ট্যাটাস
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Leave application submitted successfully!',
+                'data' => $leave
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ৫. সব ছুটির আবেদন দেখা (অ্যাডমিনের জন্য)
+    public function getLeaves()
+    {
+        $leaves = Leave::with('user')->latest()->get();
+        return response()->json([
+            'status' => true,
+            'data' => $leaves
+        ]);
+    }
+
+    // ৬. ছুটির স্ট্যাটাস আপডেট করা (Approve/Reject)
+    public function updateLeaveStatus(Request $request, $id)
+    {
+        $leave = Leave::find($id);
+
+        if (!$leave) {
+            return response()->json(['status' => false, 'message' => 'Leave record not found'], 404);
+        }
+
+        $leave->status = $request->status;
+        $leave->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Leave status updated to ' . $request->status
+        ]);
+    }
 }

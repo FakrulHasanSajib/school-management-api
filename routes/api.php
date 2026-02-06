@@ -106,16 +106,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- 8. Accounts Module ---
     Route::prefix('accounts')->group(function () {
-        // Fee Types
         Route::get('/fee-types', [AccountController::class, 'getFeeTypes']);
         Route::post('/fee-types', [AccountController::class, 'storeFeeType']);
         Route::put('/fee-types/{id}', [AccountController::class, 'updateFeeType']);
         Route::delete('/fee-types/{id}', [AccountController::class, 'deleteFeeType']);
-
-        // Invoices & Payments
         Route::post('/invoices', [AccountController::class, 'generateInvoice']);
         Route::get('/invoices', [AccountController::class, 'getAllInvoices']);
-
         Route::get('/student/{student_id}/invoices', [AccountController::class, 'getStudentInvoices']);
         Route::post('/payments', [AccountController::class, 'payInvoice']);
         Route::get('/history', [AccountController::class, 'getAllInvoices']);
@@ -126,21 +122,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/designations', [HRController::class, 'storeDesignation']);
         Route::post('/payroll/pay', [HRController::class, 'paySalary']);
         Route::post('/payroll', [HRController::class, 'storePayroll']);
-        Route::post('/leave', [HRController::class, 'storeLeave']);
-        Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
         Route::get('/payroll/history', [HRController::class, 'getPayrollHistory']);
-        Route::get('/leaves', [HRController::class, 'getLeaves']); // সব ছুটির আবেদন দেখা
-    Route::post('/leave', [HRController::class, 'storeLeave']); // ছুটির আবেদন করা
-    Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']);
+
+        // লিভ ম্যানেজমেন্ট
+        Route::post('/leave', [HRController::class, 'storeLeave']); // আবেদন জমা
+        Route::get('/leave', [HRController::class, 'getLeaves']); // সব আবেদন দেখা
+        Route::patch('/leave/{id}/status', [HRController::class, 'updateLeaveStatus']); // স্ট্যাটাস আপডেট
     });
 
-    // --- 10. Library Module ---
+    // --- 10. Library Module (FIXED) ---
     Route::prefix('library')->group(function () {
         Route::post('/books', [LibraryController::class, 'storeBook']);
-        Route::post('/issue', [LibraryController::class, 'issue']);
-        Route::post('/return/{id}', [LibraryController::class, 'returnBook']);
         Route::get('/books', [LibraryController::class, 'index']);
+        Route::post('/issue', [LibraryController::class, 'issue']);
         Route::get('/issued-books', [LibraryController::class, 'issuedBooks']);
+        Route::post('/return/{id}', [LibraryController::class, 'returnBook']);
+
+        // স্টুডেন্ট রিকোয়েস্ট
+        Route::post('/request', [LibraryController::class, 'requestBook']);
+        Route::get('/my-requests', [LibraryController::class, 'getMyRequests']);
+
+        // ✅ ADMIN রিকোয়েস্ট দেখার রাউট (FIXED: removed extra '/library')
+        Route::get('/all-requests', [LibraryController::class, 'getAllRequests']);
     });
 
     // --- 11. Notice Board Module ---
@@ -149,14 +152,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [NoticeController::class, 'store']);
     });
 
-    // --- 12. Expense Module (✅ UPDATED) ---
+    // --- 12. Expense Module ---
     Route::prefix('expenses')->group(function () {
-        Route::get('/', [ExpenseController::class, 'index']); // খরচের লিস্ট
-        Route::post('/', [ExpenseController::class, 'storeExpense']); // খরচ যোগ
-        Route::delete('/{id}', [ExpenseController::class, 'destroy']); // খরচ ডিলিট
-
-        Route::get('/categories', [ExpenseController::class, 'getCategories']); // ক্যাটাগরি লোড
-        Route::post('/categories', [ExpenseController::class, 'storeCategory']); // ক্যাটাগরি তৈরি
+        Route::get('/', [ExpenseController::class, 'index']);
+        Route::post('/', [ExpenseController::class, 'storeExpense']);
+        Route::delete('/{id}', [ExpenseController::class, 'destroy']);
+        Route::get('/categories', [ExpenseController::class, 'getCategories']);
+        Route::post('/categories', [ExpenseController::class, 'storeCategory']);
     });
 
     // --- 13. Dashboard Module ---
@@ -178,7 +180,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-// ২. কলব্যাক রাউটস (এগুলো Auth এর বাইরে থাকবে)
+// ২. কলব্যাক রাউটস (SSLCommerz)
 Route::post('/payment/callback/success', [SslCommerzController::class, 'paymentSuccess']);
 Route::post('/payment/callback/fail', [SslCommerzController::class, 'paymentFail']);
 Route::post('/payment/callback/cancel', [SslCommerzController::class, 'paymentCancel']);
