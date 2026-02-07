@@ -26,7 +26,7 @@ class AcademicController extends Controller
     {
         // এটি ক্লাস এবং তার সেকশনগুলো একসাথে নিয়ে আসবে
         $classes = $this->academicService->getAllClassesWithSections();
-        
+
         return $this->success($classes, 'Academic classes fetched successfully');
     }
 
@@ -36,8 +36,8 @@ class AcademicController extends Controller
     public function indexSection(): JsonResponse
     {
         // যদি সার্ভিসে getAllSections না থাকে তবে সরাসরি মডেল ব্যবহার করতে পারেন
-        $sections = \App\Models\Section::all(); 
-        
+        $sections = \App\Models\Section::all();
+
         return $this->success($sections, 'All sections fetched successfully');
     }
 
@@ -69,7 +69,7 @@ class AcademicController extends Controller
         $validated = $request->validate([
             'class_id' => 'required|exists:classes,id',
             'name' => 'required|string',
-            'code' => 'required|string|unique:subjects,code', 
+            'code' => 'required|string|unique:subjects,code',
             'type' => 'required|in:Theory,Practical'
         ]);
 
@@ -89,7 +89,30 @@ public function getSectionsByClass($classId): JsonResponse
 {
     // সরাসরি সেকশন মডেল থেকে ফিল্টার করে ডাটা আনা
     $sections = \App\Models\Section::where('class_id', $classId)->get();
-    
+
     return $this->success($sections, 'Sections for this class fetched successfully');
+}
+
+// AcademicController.php এর ভেতরে
+
+public function assignTeacher(Request $request)
+{
+    // ১. ভ্যালিডেশন
+    $request->validate([
+        'section_id' => 'required|exists:sections,id',
+        'teacher_id' => 'required|exists:users,id' // অথবা teachers টেবিলে থাকলে teachers,id
+    ]);
+
+    // ২. সেকশন খুঁজে বের করা
+    $section = \App\Models\Section::findOrFail($request->section_id);
+
+    // ৩. টিচার অ্যাসাইন করা
+    $section->teacher_id = $request->teacher_id;
+    $section->save();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Class Teacher assigned successfully!'
+    ]);
 }
 }

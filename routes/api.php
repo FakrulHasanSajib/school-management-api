@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\GeneralSettingController;
 use App\Http\Controllers\Api\ResultController;
 use App\Http\Controllers\Api\SslCommerzController;
 use App\Http\Controllers\Api\AdmitCardController;
+use App\Http\Controllers\Api\TeacherMarkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/subjects', [AcademicController::class, 'storeSubject']);
         Route::get('/classes/{classId}/subjects', [AcademicController::class, 'getSubjects']);
         Route::get('/sections', [AcademicController::class, 'indexSection']);
+        Route::post('/assign-teacher', [AcademicController::class, 'assignTeacher']);
     });
 
     // --- 2. Teacher Module ---
@@ -63,6 +65,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [TeacherController::class, 'show']);
         Route::put('/{id}', [TeacherController::class, 'update']);
         Route::delete('/{id}', [TeacherController::class, 'destroy']);
+        // ✅ Marks Entry Routes
+    Route::get('/init-data/{classId}', [TeacherMarkController::class, 'getInitData']);
+    Route::post('/get-marks-sheet', [TeacherMarkController::class, 'getMarksSheet']);
+    Route::post('/save-marks', [TeacherMarkController::class, 'storeMarks']);
+    Route::get('/my-routine', [RoutineController::class, 'getTeacherRoutine']);
     });
 
     // --- 3. Routine Module ---
@@ -80,6 +87,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/store', [AttendanceController::class, 'store']);
         Route::get('/report', [AttendanceController::class, 'report']);
         Route::get('/student/{studentId}/report-card', [AttendanceController::class, 'studentReportCard']);
+        Route::post('/get-students', [AttendanceController::class, 'getStudentsForAttendance']);
+        Route::post('/update', [AttendanceController::class, 'update']);
     });
 
     // --- 5. Student Module ---

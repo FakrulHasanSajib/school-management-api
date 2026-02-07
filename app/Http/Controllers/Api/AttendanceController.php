@@ -34,11 +34,11 @@ public function store(StoreAttendanceRequest $request): JsonResponse
     $section = \App\Models\Section::findOrFail($data['section_id']);
 
     // রোলটি ছোট হাতের করে নেওয়া যাতে টাইপিং এরর না হয়
-    $userRole = strtolower($user->role); 
-    
+    $userRole = strtolower($user->role);
+
     // আপনি কি সুপারঅ্যাডমিন বা অ্যাডমিন?
     $isBoss = ($userRole === 'superadmin' || $userRole === 'admin');
-    
+
     // আপনি কি এই সেকশনের ইন-চার্জ?
     $isSectionTeacher = ($user->id == $section->teacher_id);
 
@@ -65,12 +65,12 @@ public function report(Request $request): JsonResponse
     ]);
 
     $report = $this->attendanceService->getMonthlyReport(
-        $request->class_id, 
-        $request->section_id, 
-        $request->month, 
+        $request->class_id,
+        $request->section_id,
+        $request->month,
         $request->year
     );
-    
+
     return $this->success($report, 'Attendance report fetched successfully');
 }
 public function studentReportCard(Request $request, $studentId): JsonResponse
@@ -82,5 +82,40 @@ public function studentReportCard(Request $request, $studentId): JsonResponse
 
     $data = $this->attendanceService->getStudentAttendanceSummary($studentId, $request->month, $request->year);
     return $this->success($data, 'Student report card fetched successfully');
+}
+// এই ফাংশনটি AttendanceController ক্লাসের ভেতরে যোগ করুন
+
+public function getStudentsForAttendance(Request $request): JsonResponse
+{
+    $request->validate([
+        'class_id' => 'required',
+        'section_id' => 'required',
+        'date' => 'required|date'
+    ]);
+
+    $date = $request->date;
+
+    // ১. ওই সেকশনের সব স্টুডেন্ট আনা
+    $students = \App\Models\StudentProfile::with('user:id,name')
+        ->where('class_id', $request->class_id)
+        ->where('section_id', $request->section_id)
+        ->orderBy('roll_no')
+        ->get()
+        ->map(function ($student) use ($date) {
+            // ২. চেক করা আজকের হাজিরা আছে কি না
+            $attendance = \App\Models\Attendance::where('student_id', $student->user_id)
+                ->where('date', $date)
+                ->first();
+
+            return [
+                'student_id' => $student->user_id, // লগইন আইডি
+                'name' => $student->user ? $student->user->name : 'Unknown',
+                'roll' => $student->roll_no ?? 'N/A',
+                // হাজিরা থাকলে সেই স্ট্যাটাস, না থাকলে ডিফল্ট 'Present'
+                'status' => $attendance ? $attendance->status : 'Present',
+            ];
+        });
+
+    return $this->success($students, 'Student list with attendance status fetched.');
 }
 }

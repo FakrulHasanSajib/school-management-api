@@ -9,29 +9,29 @@ use Illuminate\Support\Facades\Hash;
 
 class TeacherService
 {
-    /**
-     * নতুন শিক্ষক নিবন্ধন (User + Role + Profile)
-     */
     public function createTeacher(array $data)
     {
         return DB::transaction(function () use ($data) {
+
+            // ১. ছবি আপলোড লজিক
             $imagePath = null;
-        if (isset($data['image'])) {
-            $imagePath = $data['image']->store('teachers', 'public'); // ✅ ছবি সেভ
-        }
-            // ১. ইউজার একাউন্ট তৈরি
+            if (isset($data['image'])) {
+                $imagePath = $data['image']->store('teachers', 'public');
+            }
+
+            // ২. ইউজার তৈরি
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
-                'role' => 'teacher', // ⚠️ এই লাইনটি মিসিং ছিল, তাই student হয়ে যাচ্ছিল
-                'status' => true,    // এটিও যোগ করা ভালো
+                'role' => 'teacher',
+                // 'status' => true, // ⚠️ আপনার users টেবিলে 'status' কলাম না থাকলে এই লাইনটি কমেন্ট করে দিন
             ]);
 
-            // ২. রোল এসাইন করা (Spatie)
-            $user->assignRole('teacher');
+            // ৩. রোল এসাইন (যদি Spatie প্যাকেজ থাকে তবেই এটি কাজ করবে)
+            // $user->assignRole('teacher'); // প্যাকেজ না থাকলে এটি কমেন্ট করে দিন, নাহলে এরর দিবে।
 
-            // ৩. টিচার প্রোফাইল তৈরি
+            // ৪. প্রোফাইল তৈরি
             TeacherProfile::create([
                 'user_id' => $user->id,
                 'designation' => $data['designation'],
@@ -39,21 +39,16 @@ class TeacherService
                 'phone' => $data['phone'],
                 'joining_date' => $data['joining_date'],
                 'image' => $imagePath,
-                'blood_group' => $data['blood_group'],
-                // যদি gender সেভ করতে চান, তবে এখানে 'gender' => $data['gender'] দিতে হবে
-                // এবং StoreTeacherRequest এ gender এর ভ্যালিডেশন যোগ করতে হবে।
+                // ✅ Null coalescing operator (??) ব্যবহার করুন সেফটির জন্য
+                'blood_group' => $data['blood_group'] ?? null,
             ]);
 
             return $user->load('teacherProfile');
         });
     }
 
-    /**
-     * সব শিক্ষকের লিস্ট
-     */
     public function getAllTeachers()
-{
-    // শুধু রিলেশন চেক করে সব টিচার নিয়ে আসা
-    return User::where('role', 'teacher')->with('teacherProfile')->latest()->get();
-}
+    {
+        return User::where('role', 'teacher')->with('teacherProfile')->latest()->get();
+    }
 }

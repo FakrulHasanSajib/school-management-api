@@ -63,7 +63,7 @@ class TeacherController extends Controller
         try {
             // নির্দিষ্ট আইডি এবং টিচার রোল আছে কি না চেক করা হচ্ছে
             $teacher = User::with('teacherProfile')->findOrFail($id);
-            
+
             return $this->success($teacher, 'Teacher details fetched successfully');
         } catch (\Exception $e) {
             return $this->error('Teacher not found', 404);
@@ -80,7 +80,7 @@ class TeacherController extends Controller
         'email' => 'required|email|unique:users,email,' . $id,
         'designation' => 'required|string',
         'phone' => 'required|string',
-        'image' => 'nullable|image|max:2048', 
+        'image' => 'nullable|image|max:2048',
         'blood_group' => 'nullable|string',
         'qualification' => 'required|string',
         'joining_date' => 'required|date',
@@ -151,4 +151,5 @@ class TeacherController extends Controller
             return $this->error('Failed to delete teacher', 500);
         }
     }
+
 }

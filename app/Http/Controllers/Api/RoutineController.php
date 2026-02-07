@@ -111,4 +111,19 @@ class RoutineController extends Controller
     Routine::destroy($id);
     return response()->json(['message' => 'Deleted successfully']);
 }
+// RoutineController.php এর ভেতরে
+
+public function getTeacherRoutine(Request $request)
+{
+    $teacherId = $request->user()->id; // লগইন করা টিচারের ID
+
+    $routines = \App\Models\Routine::with(['schoolClass', 'section', 'subject'])
+        ->where('teacher_id', $teacherId)
+        ->orderByRaw("FIELD(day, 'Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')")
+        ->orderBy('start_time')
+        ->get()
+        ->groupBy('day');
+
+    return response()->json(['status' => true, 'data' => $routines]);
+}
 }
