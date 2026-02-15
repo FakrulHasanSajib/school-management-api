@@ -3,7 +3,7 @@
 name: Authentication
 description: |-
 
-  APIs for managing user login, logout, and profile retrieval.
+  APIs for managing user login, logout, password change and profile retrieval.
 endpoints:
   -
     custom: []
@@ -15,7 +15,7 @@ endpoints:
       groupName: Authentication
       groupDescription: |-
 
-        APIs for managing user login, logout, and profile retrieval.
+        APIs for managing user login, logout, password change and profile retrieval.
       subgroup: ''
       subgroupDescription: ''
       title: 'User Login'
@@ -33,56 +33,30 @@ endpoints:
       email:
         custom: []
         name: email
-        description: 'The email of the user.'
+        description: 'Must be a valid email address.'
         required: true
-        example: admin@school.com
+        example: qkunze@example.com
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
       password:
         custom: []
         name: password
-        description: 'The password of the user.'
+        description: ''
         required: true
-        example: password
+        example: consequatur
         type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      email: admin@school.com
-      password: password
+      email: qkunze@example.com
+      password: consequatur
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-          "status": true,
-          "message": "Login Successful",
-          "token": "1|laravel_sanctum_token_string...",
-          "user": {
-          "id": 1,
-          "name": "Admin User",
-          "role": "super-admin"
-          }
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 401
-        content: |-
-          {
-          "status": false,
-          "message": "Email or Password does not match."
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth: []
     controller: null
@@ -98,12 +72,12 @@ endpoints:
       groupName: Authentication
       groupDescription: |-
 
-        APIs for managing user login, logout, and profile retrieval.
+        APIs for managing user login, logout, password change and profile retrieval.
       subgroup: ''
       subgroupDescription: ''
       title: 'User Logout'
-      description: "Revokes the current user's access token."
-      authenticated: true
+      description: ''
+      authenticated: false
       deprecated: false
     headers:
       Content-Type: application/json
@@ -115,17 +89,7 @@ endpoints:
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-          "status": true,
-          "message": "Logged out successfully"
-          }
-        headers: []
-        description: ''
+    responses: []
     responseFields: []
     auth: []
     controller: null
@@ -141,12 +105,12 @@ endpoints:
       groupName: Authentication
       groupDescription: |-
 
-        APIs for managing user login, logout, and profile retrieval.
+        APIs for managing user login, logout, password change and profile retrieval.
       subgroup: ''
       subgroupDescription: ''
       title: 'Get User Profile'
-      description: "Retrieves the currently authenticated user's information."
-      authenticated: true
+      description: ''
+      authenticated: false
       deprecated: false
     headers:
       Content-Type: application/json
@@ -161,21 +125,60 @@ endpoints:
     responses:
       -
         custom: []
-        status: 200
-        content: |-
-          {
-          "status": true,
-          "data": {
-          "id": 1,
-          "name": "Admin User",
-          "email": "admin@school.com",
-          "email_verified_at": "2024-01-01T00:00:00.000000Z",
-          "created_at": "2024-01-01T00:00:00.000000Z",
-          "updated_at": "2024-01-01T00:00:00.000000Z"
-          }
-          }
-        headers: []
-        description: ''
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          vary: Origin
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/change-password
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for managing user login, logout, password change and profile retrieval.
+      subgroup: ''
+      subgroupDescription: ''
+      title: |-
+        Change Password (Force Change)
+        * এটি স্টুডেন্ট ড্যাশবোর্ডের পপ-আপ থেকে কল হবে।
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      new_password:
+        custom: []
+        name: new_password
+        description: 'Must be at least 6 characters.'
+        required: true
+        example: vmqeopfuudtdsufvyvddqamniihfqcoynlazghdtqtqxbajwbpilpmufinllwloauydlsmsjur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      new_password: vmqeopfuudtdsufvyvddqamniihfqcoynlazghdtqtqxbajwbpilpmufinllwloauydlsmsjur
+    fileParameters: []
+    responses: []
     responseFields: []
     auth: []
     controller: null
